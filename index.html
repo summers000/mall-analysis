@@ -34,7 +34,19 @@
     font-size: 14px;
     background: var(--snow);
     color: var(--navy);
-    min-height: 100vh;
+    /* 鎖死在 iframe 給的空間內，完全不產生外層捲動 */
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+  }
+
+  /* 整個 App 用 flex 縱向排列：header 固定 + content 填滿剩餘 */
+  #app-root {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100vh;
+    overflow: hidden;
   }
 
   /* ── Top Nav ── */
@@ -42,8 +54,7 @@
     background: var(--navy);
     color: var(--white);
     padding: 14px 20px 0;
-    position: sticky;
-    top: 0;
+    flex-shrink: 0;   /* header 不壓縮 */
     z-index: 100;
     box-shadow: 0 2px 8px rgba(0,0,0,.25);
   }
@@ -77,7 +88,17 @@
   .tab-btn.active { background: var(--snow); color: var(--navy); }
 
   /* ── Content Shell ── */
-  #content-area { padding: 18px; }
+  #content-area {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 18px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--mist) transparent;
+  }
+  #content-area::-webkit-scrollbar { width: 5px; }
+  #content-area::-webkit-scrollbar-track { background: transparent; }
+  #content-area::-webkit-scrollbar-thumb { background: var(--mist); border-radius: 3px; }
   .section { display: none; }
   .section.active { display: block; }
 
@@ -289,6 +310,7 @@
 </style>
 </head>
 <body>
+<div id="app-root">
 
 <!-- Loading -->
 <div id="loading-overlay">
@@ -1304,5 +1326,6 @@ document.addEventListener('DOMContentLoaded', () => {
   loadSampleData();
 });
 </script>
+</div><!-- /app-root -->
 </body>
 </html>
