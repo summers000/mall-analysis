@@ -347,7 +347,8 @@
   <div class="section active" id="sec-dashboard">
     <div class="kpi-row">
       <div class="kpi-card"><div class="val" id="k-brands">0</div><div class="lbl">品牌總數</div></div>
-      <div class="kpi-card"><div class="val" id="k-malls">0</div><div class="lbl">百貨據點</div></div>
+      <div class="kpi-card"><div class="val" id="k-mallnames">0</div><div class="lbl">百貨品牌</div></div>
+      <div class="kpi-card"><div class="val" id="k-stores">0</div><div class="lbl">分店數</div></div>
       <div class="kpi-card"><div class="val" id="k-cities">0</div><div class="lbl">服務城市</div></div>
       <div class="kpi-card"><div class="val" id="k-records">0</div><div class="lbl">資料筆數</div></div>
     </div>
@@ -357,7 +358,7 @@
         <div id="d-city-bars" class="scroll-box"><div class="empty-state">尚無資料</div></div>
       </div>
       <div class="panel">
-        <h3>Top 10 百貨品牌覆蓋</h3>
+        <h3>Top 10 分店品牌覆蓋</h3>
         <div id="d-mall-bars" class="scroll-box"><div class="empty-state">尚無資料</div></div>
       </div>
     </div>
@@ -374,7 +375,8 @@
       <div class="ctrl-row">
         <div class="ctrl-group"><label>品牌搜尋</label><input type="text" id="s-brand" placeholder="輸入品牌關鍵字…"></div>
         <div class="ctrl-group"><label>城市</label><select id="s-city"><option value="">全部城市</option></select></div>
-        <div class="ctrl-group"><label>百貨公司</label><select id="s-mall"><option value="">全部百貨</option></select></div>
+        <div class="ctrl-group"><label>百貨品牌</label><select id="s-mallname"><option value="">全部百貨</option></select></div>
+        <div class="ctrl-group"><label>分店</label><select id="s-store"><option value="">全部分店</option></select></div>
         <div class="ctrl-group"><label>品牌分類</label><select id="s-cat"><option value="">全部分類</option></select></div>
         <div class="ctrl-group"><label>樓層</label><select id="s-floor"><option value="">全部樓層</option></select></div>
       </div>
@@ -396,7 +398,8 @@
         <div class="ctrl-group"><label>分析維度</label>
           <select id="hm-dim">
             <option value="city">樓層 × 城市</option>
-            <option value="mall">樓層 × 百貨公司</option>
+            <option value="mallname">樓層 × 百貨品牌</option>
+            <option value="store">樓層 × 分店</option>
           </select>
         </div>
       </div>
@@ -416,7 +419,8 @@
     <div class="panel">
       <h3>單店樓層矩陣分析</h3>
       <div class="ctrl-row">
-        <div class="ctrl-group"><label>選擇百貨公司</label><select id="mx-mall"><option value="">請選擇…</option></select></div>
+        <div class="ctrl-group"><label>百貨品牌</label><select id="mx-mallname"><option value="">請選擇…</option></select></div>
+        <div class="ctrl-group"><label>分店</label><select id="mx-store"><option value="">全部分店</option></select></div>
         <div class="ctrl-group"><label>分析單位</label>
           <select id="mx-type">
             <option value="category">品牌分類</option>
@@ -458,8 +462,8 @@
     <div class="panel">
       <h3>品牌覆蓋度比較</h3>
       <div class="ctrl-row">
-        <div class="ctrl-group"><label>百貨公司 A</label><select id="cp-a"><option value="">請選擇…</option></select></div>
-        <div class="ctrl-group"><label>百貨公司 B</label><select id="cp-b"><option value="">請選擇…</option></select></div>
+        <div class="ctrl-group"><label>分店 A</label><select id="cp-a"><option value="">請選擇分店…</option></select></div>
+        <div class="ctrl-group"><label>分店 B</label><select id="cp-b"><option value="">請選擇分店…</option></select></div>
       </div>
       <div id="cp-kpis" style="display:none" class="kpi-row">
         <div class="kpi-card"><div class="val" id="cp-a-cnt" style="color:#2563EB">0</div><div class="lbl">A 品牌數</div></div>
@@ -505,6 +509,7 @@
         <div class="ctrl-group"><label>分析維度</label>
           <select id="comp-dim">
             <option value="city">按城市</option>
+            <option value="mallname">按百貨品牌</option>
             <option value="category">按品牌分類</option>
             <option value="brand">按單一品牌</option>
           </select>
@@ -653,7 +658,7 @@ const CITY_MALLS = {
 };
 
 // App state
-let DATA = { records:[], brands:[], malls:[], cities:[], categories:[] };
+let DATA = { records:[], brands:[], mallNames:[], stores:[], cities:[], categories:[] };
 let leafletMap = null, leafletMarkers = [];
 
 // ══════════════════════════════════════════════════
@@ -705,7 +710,8 @@ function parseCSV(text) {
     if (obj.brand_name || obj['品牌名稱'] || obj['brand']) {
       // Normalize column names
       rows.push({
-        mall_name:  obj.mall_name  || obj['百貨公司'] || obj['mall'] || '',
+        mall_name:  obj.mall_name  || obj['百貨品牌'] || obj['mall_name'] || '',
+        store_name: obj.store_name || obj['分店']     || obj['store_name'] || obj['店名'] || '',
         city:       obj.city       || obj['城市']     || obj['縣市'] || '',
         brand_name: obj.brand_name || obj['品牌名稱'] || obj['brand'] || '',
         category:   obj.category   || obj['分類']     || obj['品牌分類'] || '其他',
@@ -807,7 +813,7 @@ function generateSample() {
     const shuffled = [...BRANDS].sort(() => r() - .5).slice(0, Math.min(quota, BRANDS.length));
     shuffled.forEach(([cat, brand]) => {
       const floors = FLOOR_BY_CAT[cat] || FLOORS.slice(0,6);
-      records.push({ mall_name: mall, city, brand_name: brand, category: cat, floor: floors[Math.floor(r()*floors.length)] });
+      records.push({ mall_name: mall, store_name: mall, city, brand_name: brand, category: cat, floor: floors[Math.floor(r()*floors.length)] });
     });
   });
   return records;
@@ -818,9 +824,10 @@ function generateSample() {
 // ══════════════════════════════════════════════════
 
 function initData(records) {
-  DATA.records = records;
+  DATA.records    = records;
   DATA.brands     = [...new Set(records.map(r => r.brand_name))].sort();
-  DATA.malls      = [...new Set(records.map(r => r.mall_name))].sort();
+  DATA.mallNames  = [...new Set(records.map(r => r.mall_name))].sort();
+  DATA.stores     = [...new Set(records.map(r => r.store_name))].sort();
   DATA.cities     = [...new Set(records.map(r => r.city))].sort();
   DATA.categories = [...new Set(records.map(r => r.category))].sort();
 
@@ -839,25 +846,47 @@ function fillSelect(id, items, placeholder) {
 }
 
 function populateAllDropdowns() {
-  fillSelect('s-city',  DATA.cities,    '全部城市');
-  fillSelect('s-cat',   DATA.categories,'全部分類');
-  fillSelect('s-floor', FLOORS,         '全部樓層');
-  fillSelect('hm-cat',  DATA.categories,'全部分類');
-  fillSelect('mx-mall', DATA.malls,     '請選擇…');
-  fillSelect('map-brand',DATA.brands,   '全部品牌');
-  fillSelect('map-city', DATA.cities,   '全部城市');
-  fillSelect('map-floor',FLOORS,        '全部樓層');
-  fillSelect('cp-a',    DATA.malls,     '請選擇…');
-  fillSelect('cp-b',    DATA.malls,     '請選擇…');
+  fillSelect('s-city',     DATA.cities,    '全部城市');
+  fillSelect('s-mallname', DATA.mallNames, '全部百貨');
+  fillSelect('s-store',    DATA.stores,    '全部分店');
+  fillSelect('s-cat',      DATA.categories,'全部分類');
+  fillSelect('s-floor',    FLOORS,         '全部樓層');
+  fillSelect('hm-cat',     DATA.categories,'全部分類');
+  fillSelect('mx-mallname',DATA.mallNames, '請選擇…');
+  fillSelect('mx-store',   DATA.stores,    '全部分店');
+  fillSelect('map-brand',  DATA.brands,    '全部品牌');
+  fillSelect('map-city',   DATA.cities,    '全部城市');
+  fillSelect('map-floor',  FLOORS,         '全部樓層');
+  fillSelect('cp-a',       DATA.stores,    '請選擇分店…');
+  fillSelect('cp-b',       DATA.stores,    '請選擇分店…');
   updateCompFilter();
 }
 
-function updateMallDropdown() {
+function updateSearchMallDrop() {
   const city = document.getElementById('s-city').value;
-  const malls = city
+  const mallNames = city
     ? [...new Set(DATA.records.filter(r => r.city === city).map(r => r.mall_name))].sort()
-    : DATA.malls;
-  fillSelect('s-mall', malls, '全部百貨');
+    : DATA.mallNames;
+  fillSelect('s-mallname', mallNames, '全部百貨');
+  updateSearchStoreDrop();
+}
+
+function updateSearchStoreDrop() {
+  const city = document.getElementById('s-city').value;
+  const mallName = document.getElementById('s-mallname').value;
+  let rows = DATA.records;
+  if (city)     rows = rows.filter(r => r.city === city);
+  if (mallName) rows = rows.filter(r => r.mall_name === mallName);
+  const stores = [...new Set(rows.map(r => r.store_name))].sort();
+  fillSelect('s-store', stores, '全部分店');
+}
+
+function updateMatrixStoreDrop() {
+  const mallName = document.getElementById('mx-mallname').value;
+  const stores = mallName
+    ? [...new Set(DATA.records.filter(r => r.mall_name === mallName).map(r => r.store_name))].sort()
+    : DATA.stores;
+  fillSelect('mx-store', stores, '全部分店');
 }
 
 // ══════════════════════════════════════════════════
@@ -905,20 +934,21 @@ function renderActiveTab() {
 
 function renderDashboard() {
   const R = DATA.records;
-  document.getElementById('k-brands').textContent  = new Set(R.map(r=>r.brand_name)).size;
-  document.getElementById('k-malls').textContent   = new Set(R.map(r=>r.mall_name)).size;
-  document.getElementById('k-cities').textContent  = new Set(R.map(r=>r.city)).size;
-  document.getElementById('k-records').textContent = R.length;
+  document.getElementById('k-brands').textContent    = new Set(R.map(r=>r.brand_name)).size;
+  document.getElementById('k-mallnames').textContent = new Set(R.map(r=>r.mall_name)).size;
+  document.getElementById('k-stores').textContent    = new Set(R.map(r=>r.store_name)).size;
+  document.getElementById('k-cities').textContent    = new Set(R.map(r=>r.city)).size;
+  document.getElementById('k-records').textContent   = R.length;
 
   // City bars
   const cityCount = {};
   DATA.cities.forEach(c => { cityCount[c] = new Set(R.filter(r=>r.city===c).map(r=>r.brand_name)).size; });
   renderBars('d-city-bars', cityCount);
 
-  // Mall bars (top 10)
-  const mallCount = {};
-  DATA.malls.forEach(m => { mallCount[m] = new Set(R.filter(r=>r.mall_name===m).map(r=>r.brand_name)).size; });
-  const top10 = Object.entries(mallCount).sort(([,a],[,b])=>b-a).slice(0,10);
+  // Store bars top 10 (by store_name)
+  const storeCount = {};
+  DATA.stores.forEach(s => { storeCount[s] = new Set(R.filter(r=>r.store_name===s).map(r=>r.brand_name)).size; });
+  const top10 = Object.entries(storeCount).sort(([,a],[,b])=>b-a).slice(0,10);
   renderBars('d-mall-bars', Object.fromEntries(top10));
 
   // Floor snapshot
@@ -942,12 +972,15 @@ function renderSearch() {
   const cat    = document.getElementById('s-cat').value;
   const floor  = document.getElementById('s-floor').value;
 
+  const mallname = document.getElementById('s-mallname').value;
+  const store    = document.getElementById('s-store').value;
   let rows = DATA.records;
-  if (q)     rows = rows.filter(r => r.brand_name.toLowerCase().includes(q));
-  if (city)  rows = rows.filter(r => r.city === city);
-  if (mall)  rows = rows.filter(r => r.mall_name === mall);
-  if (cat)   rows = rows.filter(r => r.category === cat);
-  if (floor) rows = rows.filter(r => r.floor === floor);
+  if (q)        rows = rows.filter(r => r.brand_name.toLowerCase().includes(q));
+  if (city)     rows = rows.filter(r => r.city === city);
+  if (mallname) rows = rows.filter(r => r.mall_name === mallname);
+  if (store)    rows = rows.filter(r => r.store_name === store);
+  if (cat)      rows = rows.filter(r => r.category === cat);
+  if (floor)    rows = rows.filter(r => r.floor === floor);
 
   document.getElementById('s-count').textContent = `共 ${rows.length} 筆`;
 
@@ -967,8 +1000,9 @@ function renderSearch() {
       ${locs.map(l => `
         <div class="result-location">
           <div>
-            <span style="font-weight:500">${esc(l.mall_name)}</span>
-            <span style="color:var(--slate);font-size:12px;margin-left:6px">${esc(l.city)}</span>
+            <span style="font-weight:500">${esc(l.store_name)}</span>
+            <span style="background:var(--ice);color:var(--slate);font-size:10px;padding:1px 6px;border-radius:4px;margin-left:6px">${esc(l.mall_name)}</span>
+            <span style="color:var(--mist);font-size:11px;margin-left:4px">${esc(l.city)}</span>
           </div>
           <span class="floor-badge">${esc(l.floor)}</span>
         </div>`).join('')}
@@ -976,7 +1010,7 @@ function renderSearch() {
 }
 
 function clearSearch() {
-  ['s-brand','s-city','s-mall','s-cat','s-floor'].forEach(id => {
+  ['s-brand','s-city','s-mallname','s-store','s-cat','s-floor'].forEach(id => {
     const el = document.getElementById(id);
     el.tagName === 'INPUT' ? el.value = '' : el.value = '';
   });
@@ -997,11 +1031,14 @@ function renderHeatmap() {
   if (q)   rows = rows.filter(r => r.brand_name.toLowerCase().includes(q));
   if (cat) rows = rows.filter(r => r.category === cat);
 
-  const cols = dim === 'city' ? DATA.cities : DATA.malls;
+  const cols = dim === 'city' ? DATA.cities : dim === 'mallname' ? DATA.mallNames : DATA.stores;
+  const getKey = dim === 'city' ? r => r.city : dim === 'mallname' ? r => r.mall_name : r => r.store_name;
   const matrix = {};
   FLOORS.forEach(f => {
     matrix[f] = {};
-    cols.forEach(c => { matrix[f][c] = rows.filter(r => r.floor===f && (dim==='city'?r.city:r.mall_name)===c).length; });
+    cols.forEach(c => {
+      matrix[f][c] = rows.filter(r => r.floor===f && getKey(r)===c).length;
+    });
   });
 
   renderHeatTable('hm-table', FLOORS, cols, matrix, true);
@@ -1012,11 +1049,14 @@ function renderHeatmap() {
 // ══════════════════════════════════════════════════
 
 function renderMatrix() {
-  const mall = document.getElementById('mx-mall').value;
-  const type = document.getElementById('mx-type').value;
-  if (!mall) return;
+  const mallName = document.getElementById('mx-mallname').value;
+  const store    = document.getElementById('mx-store').value;
+  const type     = document.getElementById('mx-type').value;
+  if (!mallName && !store) return;
 
-  const rows = DATA.records.filter(r => r.mall_name === mall);
+  let rows = DATA.records;
+  if (mallName) rows = rows.filter(r => r.mall_name === mallName);
+  if (store)    rows = rows.filter(r => r.store_name === store);
   let cols;
   if (type === 'category') {
     cols = DATA.categories;
@@ -1061,13 +1101,14 @@ function renderMap() {
   let visible = 0, totalBrands = new Set(), totalMalls = 0;
 
   STORE_COORDS.forEach(store => {
-    let rows = DATA.records.filter(r => r.mall_name === store.n);
+    // Match by store_name first, then fall back to mall_name
+    let rows = DATA.records.filter(r => r.store_name === store.n || r.mall_name === store.n);
     if (!rows.length) return;
 
     if (selBrand) rows = rows.filter(r => r.brand_name === selBrand);
     if (selFloor) rows = rows.filter(r => r.floor === selFloor);
     if (selCity) {
-      const storeCity = Object.entries(CITY_MALLS).find(([,ms])=>ms.includes(store.n))?.[0]||'';
+      const storeCity = DATA.records.find(r => r.store_name === store.n || r.mall_name === store.n)?.city || '';
       if (storeCity !== selCity) return;
     }
 
@@ -1087,7 +1128,9 @@ function renderMap() {
     });
 
     const marker = L.marker([store.lat,store.lng],{icon})
-      .bindPopup(`<b>${store.n}</b><br>品牌數：<b>${cnt}</b><br>專櫃筆數：${rows.length}`)
+      .bindPopup(`<b>${store.n}</b><br>
+        <span style='color:#475569;font-size:12px'>${rows[0]?.mall_name||''}</span><br>
+        品牌數：<b>${cnt}</b>　專櫃筆數：${rows.length}`)
       .addTo(leafletMap);
     leafletMarkers.push(marker);
   });
@@ -1111,8 +1154,8 @@ function renderCompare() {
     return;
   }
 
-  const bA = new Set(DATA.records.filter(r=>r.mall_name===mallA).map(r=>r.brand_name));
-  const bB = new Set(DATA.records.filter(r=>r.mall_name===mallB).map(r=>r.brand_name));
+  const bA = new Set(DATA.records.filter(r=>r.store_name===mallA).map(r=>r.brand_name));
+  const bB = new Set(DATA.records.filter(r=>r.store_name===mallB).map(r=>r.brand_name));
   const shared = new Set([...bA].filter(b=>bB.has(b)));
   const onlyA  = new Set([...bA].filter(b=>!bB.has(b)));
   const onlyB  = new Set([...bB].filter(b=>!bA.has(b)));
@@ -1141,8 +1184,8 @@ function renderCompare() {
 
   // Category comparison
   const catRows = DATA.categories.map(cat => {
-    const cntA = new Set(DATA.records.filter(r=>r.mall_name===mallA&&r.category===cat).map(r=>r.brand_name)).size;
-    const cntB = new Set(DATA.records.filter(r=>r.mall_name===mallB&&r.category===cat).map(r=>r.brand_name)).size;
+    const cntA = new Set(DATA.records.filter(r=>r.store_name===mallA&&r.category===cat).map(r=>r.brand_name)).size;
+    const cntB = new Set(DATA.records.filter(r=>r.store_name===mallB&&r.category===cat).map(r=>r.brand_name)).size;
     return { cat, cntA, cntB };
   });
   const maxCat = Math.max(...catRows.map(r=>Math.max(r.cntA,r.cntB)),1);
@@ -1169,9 +1212,9 @@ function renderCompare() {
 
 function updateCompFilter() {
   const dim = document.getElementById('comp-dim').value;
-  const labels = {city:'選擇城市',category:'選擇品牌分類',brand:'選擇品牌'};
-  document.getElementById('comp-filter-lbl').textContent = labels[dim];
-  const opts = dim==='city' ? DATA.cities : dim==='category' ? DATA.categories : DATA.brands;
+  const labels = {city:'選擇城市',mallname:'選擇百貨品牌',category:'選擇品牌分類',brand:'選擇品牌'};
+  document.getElementById('comp-filter-lbl').textContent = labels[dim]||'選擇…';
+  const opts = dim==='city' ? DATA.cities : dim==='mallname' ? DATA.mallNames : dim==='category' ? DATA.categories : DATA.brands;
   fillSelect('comp-filter', opts, '請選擇…');
 }
 
@@ -1187,11 +1230,13 @@ function renderComp() {
 
   let rows = DATA.records;
   if (dim === 'city')     rows = rows.filter(r => r.city === filter);
+  if (dim === 'mallname') rows = rows.filter(r => r.mall_name === filter);
   if (dim === 'category') rows = rows.filter(r => r.category === filter);
   if (dim === 'brand')    rows = rows.filter(r => r.brand_name === filter);
 
+  // Group by store_name for competition ranking
   const mallCnt = {};
-  rows.forEach(r => { (mallCnt[r.mall_name] = mallCnt[r.mall_name]||new Set()).add(r.brand_name); });
+  rows.forEach(r => { (mallCnt[r.store_name] = mallCnt[r.store_name]||new Set()).add(r.brand_name); });
   const sorted = Object.entries(mallCnt).map(([m,s])=>({m,cnt:s.size})).sort((a,b)=>b.cnt-a.cnt);
 
   document.getElementById('comp-k1').textContent = sorted.length;
@@ -1217,19 +1262,18 @@ function renderComp() {
     </div>`).join('');
 
   // Competition heatmap (malls × categories)
-  const topMalls = top.map(x=>x.m);
+  const topStores = top.map(x=>x.m);
   const cats = DATA.categories;
   const hmMatrix = {};
-  topMalls.forEach(m => {
-    hmMatrix[m] = {};
+  topStores.forEach(s => {
+    hmMatrix[s] = {};
     cats.forEach(c => {
-      hmMatrix[m][c] = new Set(rows.filter(r=>r.mall_name===m&&r.category===c).map(r=>r.brand_name)).size;
+      hmMatrix[s][c] = new Set(rows.filter(r=>r.store_name===s&&r.category===c).map(r=>r.brand_name)).size;
     });
   });
-  // Render as mall rows × cat cols
   const mat2 = {};
-  topMalls.forEach(m => { mat2[m] = hmMatrix[m]; });
-  renderHeatTable('comp-hm', topMalls, cats, mat2, false, m => m.substring(0,12));
+  topStores.forEach(s => { mat2[s] = hmMatrix[s]; });
+  renderHeatTable('comp-hm', topStores, cats, mat2, false, s => s.length>12 ? s.substring(0,11)+'…' : s);
 }
 
 // ══════════════════════════════════════════════════
@@ -1299,18 +1343,20 @@ function setDataStatus(ok, msg) {
 document.addEventListener('DOMContentLoaded', () => {
   hideLoading();
 
-  // Search
-  ['s-brand','s-city','s-mall','s-cat','s-floor'].forEach(id =>
-    document.getElementById(id).addEventListener('change', renderSearch));
+  // Search – cascade: city → mallname → store
   document.getElementById('s-brand').addEventListener('input', renderSearch);
-  document.getElementById('s-city').addEventListener('change', () => { updateMallDropdown(); renderSearch(); });
+  document.getElementById('s-city').addEventListener('change', () => { updateSearchMallDrop(); renderSearch(); });
+  document.getElementById('s-mallname').addEventListener('change', () => { updateSearchStoreDrop(); renderSearch(); });
+  ['s-store','s-cat','s-floor'].forEach(id =>
+    document.getElementById(id).addEventListener('change', renderSearch));
 
   // Heatmap
   document.getElementById('hm-brand').addEventListener('input', renderHeatmap);
   ['hm-cat','hm-dim'].forEach(id => document.getElementById(id).addEventListener('change', renderHeatmap));
 
-  // Matrix
-  ['mx-mall','mx-type'].forEach(id => document.getElementById(id).addEventListener('change', renderMatrix));
+  // Matrix – cascade: mallname → store
+  document.getElementById('mx-mallname').addEventListener('change', () => { updateMatrixStoreDrop(); renderMatrix(); });
+  ['mx-store','mx-type'].forEach(id => document.getElementById(id).addEventListener('change', renderMatrix));
 
   // Map
   ['map-brand','map-city','map-floor'].forEach(id => document.getElementById(id).addEventListener('change', renderMap));
