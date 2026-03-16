@@ -91,42 +91,8 @@
     padding: 0 24px;
     flex-shrink: 0;
     z-index: 100;
-    /* 底部磚紅細線 */
     border-bottom: 3px solid var(--accent);
     box-shadow: 0 2px 16px rgba(15,43,99,.30);
-  }
-
-  #header-top {
-    display: flex;
-    align-items: center;
-    padding: 14px 0 10px;
-    gap: 12px;
-  }
-
-  /* 磚紅方塊 logo 標記 */
-  #header-top::before {
-    content: '';
-    display: block;
-    width: 6px;
-    height: 28px;
-    background: var(--accent);
-    border-radius: 3px;
-    flex-shrink: 0;
-  }
-
-  #app-header h1 {
-    font-size: 20px;            /* header 內縮小，保留空間給 Tab */
-    font-weight: 700;
-    letter-spacing: .04em;
-    color: #FFFFFF;
-  }
-
-  #header-subtitle {
-    font-size: 12px;
-    color: rgba(255,255,255,.55);
-    margin-left: auto;
-    white-space: nowrap;
-    letter-spacing: .02em;
   }
 
   /* ── Tab Bar ── */
@@ -135,7 +101,7 @@
     gap: 0;
     overflow-x: auto;
     scrollbar-width: none;
-    margin-top: 2px;
+    padding-top: 6px;
   }
   #tab-bar::-webkit-scrollbar { display: none; }
 
@@ -604,17 +570,209 @@
   .scroll-box::-webkit-scrollbar-track { background: var(--border-light); border-radius: 2px; }
   .scroll-box::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 
-  /* ── Section heading in content ── */
-  #sec-dashboard .dash-header,
-  #sec-search .dash-header,
-  #sec-heatmap .dash-header,
-  #sec-matrix .dash-header,
-  #sec-map .dash-header,
-  #sec-compare .dash-header,
-  #sec-competition .dash-header {
-    font-size: 22px; font-weight: 700;
+  /* ── News Cards ── */
+  .news-card {
+    background: var(--card);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+    transition: box-shadow .2s, transform .2s;
+    display: flex;
+    flex-direction: column;
+    cursor: pointer;
+  }
+  .news-card:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+  }
+  .news-card-img {
+    width: 100%;
+    height: 160px;
+    object-fit: cover;
+    background: linear-gradient(135deg, #E8EEF8 0%, #EDE8E0 100%);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--text-muted);
+    font-size: 28px;
+    flex-shrink: 0;
+  }
+  .news-card-img img {
+    width: 100%; height: 100%; object-fit: cover;
+  }
+  .news-card-body {
+    padding: 14px 16px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .news-card-source {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: .06em;
+  }
+  .news-card-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary);
+    line-height: 1.45;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .news-card-desc {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.55;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    flex: 1;
+  }
+  .news-card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid var(--border-light);
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+  .news-card-footer a {
     color: var(--primary);
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 12px;
+  }
+  .news-card-footer a:hover { color: var(--accent); }
+
+  /* ── Report Tab Buttons ── */
+  .rpt-tab-btn {
+    padding: 7px 20px;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    background: transparent;
+    color: var(--text-secondary);
+    font-family: var(--font-body);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all .15s;
+  }
+  .rpt-tab-btn:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+  }
+  .rpt-tab-active {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: #FFFFFF !important;
+  }
+
+  /* ── Report Cards ── */
+  .report-card {
+    background: var(--card);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-lg);
     margin-bottom: 16px;
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+  }
+  .report-card-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 18px 20px;
+    cursor: pointer;
+    user-select: none;
+    transition: background .12s;
+  }
+  .report-card-header:hover { background: #FAF7F4; }
+  .report-period-badge {
+    background: var(--primary);
+    color: #FFFFFF;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 700;
+    white-space: nowrap;
+    flex-shrink: 0;
+    font-family: var(--font-mono);
+  }
+  .report-card-meta {
+    flex: 1;
+    min-width: 0;
+  }
+  .report-card-title {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--primary);
+    margin-bottom: 5px;
+    line-height: 1.4;
+  }
+  .report-card-summary {
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.55;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .report-card-tags {
+    display: flex; flex-wrap: wrap; gap: 5px; margin-top: 6px;
+  }
+  .report-tag {
+    background: var(--accent-pale);
+    color: var(--accent);
+    border: 1px solid #DDB8A8;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 500;
+  }
+  .risk-badge {
+    padding: 3px 10px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 700;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .risk-high   { background: #FDECEA; color: #B03A2E; border: 1px solid #F5B7B1; }
+  .risk-mid    { background: #FEF9E7; color: #9A6700; border: 1px solid #FAD77B; }
+  .risk-low    { background: #EAFAF1; color: #1E8449; border: 1px solid #A9DFBF; }
+  .report-toggle { font-size: 18px; color: var(--text-muted); flex-shrink:0; margin-top:2px; }
+
+  /* Report expanded body */
+  .report-card-body {
+    display: none;
+    padding: 0 20px 20px;
+    border-top: 1px solid var(--border-light);
+  }
+  .report-card-body.open { display: block; }
+  .report-body-content {
+    padding-top: 16px;
+    font-size: 15px;
+    line-height: 1.8;
+    color: var(--text-primary);
+    white-space: pre-wrap;
+  }
+  .report-body-content h4 {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--primary);
+    margin: 14px 0 6px;
+    border-left: 3px solid var(--accent);
+    padding-left: 8px;
+  }
+  .report-divider {
+    height: 1px; background: var(--border-light); margin: 14px 0;
   }
 </style>
 </head>
@@ -629,18 +787,16 @@
 
 <!-- Header + Tabs -->
 <div id="app-header">
-  <div id="header-top">
-    <h1>台灣百貨專櫃分析系統</h1>
-    <span id="header-subtitle">Department Store Intelligence Platform</span>
-  </div>
   <div id="tab-bar">
-    <button class="tab-btn active" data-tab="dashboard">儀表板</button>
+    <button class="tab-btn active" data-tab="news">零售新聞</button>
+    <button class="tab-btn" data-tab="dashboard">儀表板</button>
     <button class="tab-btn" data-tab="search">品牌查詢</button>
     <button class="tab-btn" data-tab="heatmap">熱力圖</button>
     <button class="tab-btn" data-tab="matrix">樓層矩陣</button>
     <button class="tab-btn" data-tab="map">地圖</button>
     <button class="tab-btn" data-tab="compare">覆蓋比較</button>
     <button class="tab-btn" data-tab="competition">競爭分析</button>
+    <button class="tab-btn" data-tab="reports">產業報告</button>
   </div>
 </div>
 
@@ -656,7 +812,7 @@
   </div>
 
   <!-- ── DASHBOARD ── -->
-  <div class="section active" id="sec-dashboard">
+  <div class="section" id="sec-dashboard">
     <div class="section-title">儀表板總覽</div>
     <div class="kpi-row">
       <div class="kpi-card"><div class="val" id="k-brands">0</div><div class="lbl">品牌總數</div></div>
@@ -858,6 +1014,88 @@
           </div>
         </div>
       </div>
+    </div>
+  </div>
+
+
+  <!-- ── NEWS ── -->
+  <div class="section active" id="sec-news">
+    <div class="section-title">零售產業新聞</div>
+
+    <!-- 關鍵字控制列 -->
+    <div class="panel" style="margin-bottom:16px">
+      <div class="ctrl-row" style="margin-bottom:8px">
+        <div class="ctrl-group" style="flex:2">
+          <label>搜尋關鍵字</label>
+          <input type="text" id="news-keyword" placeholder="百貨 零售 購物 品牌…（空白分隔多個關鍵字）" value="台灣 百貨 零售">
+        </div>
+        <div class="ctrl-group" style="flex:1">
+          <label>語言 / 地區</label>
+          <select id="news-lang">
+            <option value="zh-TW">繁體中文（台灣）</option>
+            <option value="zh-CN">簡體中文</option>
+            <option value="en-US">English (US)</option>
+          </select>
+        </div>
+        <div class="ctrl-group" style="flex:0 0 auto;justify-content:flex-end">
+          <label>&nbsp;</label>
+          <button class="btn btn-primary" onclick="loadNews()">🔄 重新抓取</button>
+        </div>
+      </div>
+      <div id="news-status" style="font-size:12px;color:var(--text-muted);min-height:18px"></div>
+    </div>
+
+    <!-- 新聞卡片區 -->
+    <div id="news-grid" style="
+      display:grid;
+      grid-template-columns:repeat(auto-fill,minmax(300px,1fr));
+      gap:16px;
+    ">
+      <div class="empty-state" style="grid-column:1/-1">點擊「重新抓取」載入最新新聞</div>
+    </div>
+  </div>
+
+  <!-- ── REPORTS ── -->
+  <div class="section" id="sec-reports">
+    <div class="section-title">產業分析報告</div>
+
+    <!-- 報告資料來源 -->
+    <div id="report-banner" style="
+      background:var(--card);border:1px solid var(--border);
+      border-left:4px solid var(--primary-mid);
+      border-radius:var(--radius);padding:10px 16px;
+      margin-bottom:16px;display:flex;align-items:center;gap:10px;
+      font-size:13px;color:var(--text-secondary);
+    ">
+      <div class="dot" id="rpt-dot"></div>
+      <span id="rpt-status">未連接報告資料來源</span>
+      <input type="text" id="report-sheets-url" style="
+        flex:1;min-width:0;border:1px solid var(--border);
+        border-radius:var(--radius-sm);padding:6px 10px;
+        font-size:12px;font-family:var(--font-mono);
+        color:var(--text-primary);background:var(--bg);" 
+        placeholder="貼上報告 Google Sheets CSV 連結（欄位：period_type, period_label, title, summary, content, risk_level, tags）"/>
+      <button onclick="loadReports()" style="
+        padding:6px 14px;background:var(--primary);color:#fff;
+        border:none;border-radius:var(--radius-sm);cursor:pointer;
+        font-size:13px;white-space:nowrap;">載入</button>
+      <button onclick="loadSampleReports()" style="
+        padding:6px 14px;background:transparent;border:1px solid var(--border);
+        color:var(--text-secondary);border-radius:var(--radius-sm);
+        cursor:pointer;font-size:13px;white-space:nowrap;">範例</button>
+    </div>
+
+    <!-- 週 / 月 切換 -->
+    <div style="display:flex;gap:8px;margin-bottom:16px;align-items:center">
+      <button id="rpt-tab-week"  class="rpt-tab-btn rpt-tab-active" onclick="switchReportTab('week')">按週</button>
+      <button id="rpt-tab-month" class="rpt-tab-btn" onclick="switchReportTab('month')">按月</button>
+      <span style="flex:1"></span>
+      <span id="rpt-count" style="font-size:13px;color:var(--text-muted)"></span>
+    </div>
+
+    <!-- 報告列表 -->
+    <div id="report-list">
+      <div class="empty-state">請載入報告資料來源，或點擊「範例」查看示範內容</div>
     </div>
   </div>
 
@@ -1220,10 +1458,12 @@ const TAB_MAP = {
   matrix:      'sec-matrix',
   map:         'sec-map',
   compare:     'sec-compare',
-  competition: 'sec-competition'
+  competition: 'sec-competition',
+  news:        'sec-news',
+  reports:     'sec-reports'
 };
 
-let currentTab = 'dashboard';
+let currentTab = 'news';
 
 document.querySelectorAll('.tab-btn').forEach(btn => {
   btn.addEventListener('click', () => {
@@ -1245,6 +1485,8 @@ function renderActiveTab() {
     case 'map':         renderMap();       break;
     case 'compare':     renderCompare();   break;
     case 'competition': renderComp();      break;
+    case 'news':        renderNewsTab();   break;
+    case 'reports':     renderReportsTab();break;
   }
 }
 
@@ -1654,6 +1896,421 @@ function hideLoading() { document.getElementById('loading-overlay').style.displa
 function setDataStatus(ok, msg) {
   document.getElementById('ds-dot').className = 'dot ' + (ok ? 'ok' : 'err');
   document.getElementById('ds-status').textContent = msg;
+}
+
+// ══════════════════════════════════════════════════
+// NEWS TAB  —  Google News RSS via rss2json proxy
+// ══════════════════════════════════════════════════
+// Google News RSS 有 CORS 限制，透過 rss2json.com 免費 API 轉換
+// 免費方案：每日 1000 次請求，足夠個人使用
+
+let newsLoaded = false;
+
+// ── 多層 proxy 備援清單 ──
+// 策略：依序嘗試，成功就停止，全部失敗才報錯
+// Proxy 1: corsproxy.io — 直接回傳 RSS XML，用 DOMParser 解析
+// Proxy 2: allorigins.win — 同上
+// Proxy 3: rss2json.com  — 回傳已解析的 JSON（格式不同，單獨處理）
+const NEWS_PROXIES = [
+  {
+    name: 'corsproxy.io',
+    type: 'xml',
+    buildUrl: rssUrl => `https://corsproxy.io/?url=${encodeURIComponent(rssUrl)}`
+  },
+  {
+    name: 'allorigins',
+    type: 'xml-wrapped',
+    buildUrl: rssUrl => `https://api.allorigins.win/get?url=${encodeURIComponent(rssUrl)}`
+  },
+  {
+    name: 'rss2json',
+    type: 'json',
+    buildUrl: rssUrl => `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(rssUrl)}&count=24`
+  }
+];
+
+function renderNewsTab() {
+  if (!newsLoaded) loadNews();
+}
+
+async function loadNews() {
+  const keyword  = document.getElementById('news-keyword').value.trim() || '台灣 百貨 零售';
+  const lang     = document.getElementById('news-lang').value;
+  const statusEl = document.getElementById('news-status');
+  const gridEl   = document.getElementById('news-grid');
+
+  statusEl.textContent = '抓取中…';
+  gridEl.innerHTML = '<div class="empty-state" style="grid-column:1/-1">載入新聞中，請稍候…</div>';
+
+  // 組合 Google News RSS URL
+  const q    = encodeURIComponent(keyword);
+  const hl   = lang;
+  const gl   = lang === 'zh-TW' ? 'TW' : lang === 'zh-CN' ? 'CN' : 'US';
+  const ceid = lang === 'zh-TW' ? 'TW:zh-Hant' : lang === 'zh-CN' ? 'CN:zh-Hans' : 'US:en';
+  const rssUrl = `https://news.google.com/rss/search?q=${q}&hl=${hl}&gl=${gl}&ceid=${ceid}`;
+
+  let items = null;
+  let lastError = '';
+  let usedProxy = '';
+
+  // 依序嘗試每個 proxy
+  for (const proxy of NEWS_PROXIES) {
+    statusEl.textContent = `嘗試 ${proxy.name}…`;
+    try {
+      const url  = proxy.buildUrl(rssUrl);
+      const resp = await fetch(url, { signal: AbortSignal.timeout(8000) });
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+
+      if (proxy.type === 'json') {
+        // rss2json 直接回傳 JSON
+        const data = await resp.json();
+        if (data.status !== 'ok') throw new Error(data.message || 'rss2json 解析失敗');
+        items = (data.items || []).map(i => ({
+          title:   i.title   || '',
+          desc:    (i.description || '').replace(/<[^>]*>/g, '').trim(),
+          link:    i.link    || '#',
+          source:  i.source  || i.author || '',
+          pubDate: i.pubDate || '',
+          img:     i.enclosure?.link || i.thumbnail || ''
+        }));
+      } else {
+        // XML proxy：取得 XML 文字再自行解析
+        let xmlText = '';
+        if (proxy.type === 'xml-wrapped') {
+          const json = await resp.json();
+          xmlText = json.contents || '';
+        } else {
+          xmlText = await resp.text();
+        }
+        items = parseRssXml(xmlText);
+      }
+
+      if (items && items.length > 0) {
+        usedProxy = proxy.name;
+        break;  // 成功，跳出迴圈
+      }
+      throw new Error('解析結果為空');
+
+    } catch(e) {
+      lastError = `${proxy.name}: ${e.message}`;
+      items = null;
+      // 繼續嘗試下一個 proxy
+    }
+  }
+
+  if (!items || !items.length) {
+    gridEl.innerHTML = `
+      <div class="empty-state" style="grid-column:1/-1">
+        <div style="font-size:28px;margin-bottom:10px">📡</div>
+        <div style="font-weight:600;margin-bottom:6px">暫時無法載入新聞</div>
+        <div style="font-size:13px;color:var(--text-muted);margin-bottom:12px">
+          三個備援來源均無回應，可能是網路限制或服務暫時中斷
+        </div>
+        <div style="font-size:11px;color:var(--text-muted);font-family:var(--font-mono);
+          background:var(--border-light);padding:8px 12px;border-radius:6px;
+          text-align:left;max-width:400px;margin:0 auto">
+          ${esc(lastError)}
+        </div>
+        <div style="margin-top:14px;font-size:13px">
+          <button class="btn btn-primary" onclick="loadNews()" style="margin-right:8px">🔄 重試</button>
+          <a href="https://news.google.com/search?q=${encodeURIComponent(keyword)}&hl=${lang}"
+             target="_blank" class="btn btn-ghost" style="text-decoration:none">
+            在 Google News 查看 →
+          </a>
+        </div>
+      </div>`;
+    statusEl.textContent = '';
+    return;
+  }
+
+  renderNewsCards(items);
+  newsLoaded = true;
+  const now = new Date().toLocaleString('zh-TW');
+  statusEl.textContent = `共 ${items.length} 則  ·  ${usedProxy}  ·  更新於 ${now}`;
+}
+
+// 用瀏覽器內建 DOMParser 解析 RSS XML
+function parseRssXml(xmlText) {
+  try {
+    const parser  = new DOMParser();
+    const doc     = parser.parseFromString(xmlText, 'text/xml');
+    const entries = doc.querySelectorAll('item');
+    if (!entries.length) return [];
+
+    const stripHtml = s => (s || '').replace(/<[^>]*>/g, '').trim();
+
+    return Array.from(entries).map(el => {
+      const get = tag => el.querySelector(tag)?.textContent || '';
+      const title   = stripHtml(get('title'));
+      const link    = get('link') || el.querySelector('guid')?.textContent || '#';
+      const desc    = stripHtml(get('description'));
+      const pubDate = get('pubDate');
+      // Google News RSS 的來源標籤
+      const source  = el.querySelector('source')?.textContent ||
+                      el.querySelector('publisher')?.textContent || '';
+      // 嘗試從 media:content 或 enclosure 抓圖
+      const mediaUrl = el.querySelector('media\\:content')?.getAttribute('url') ||
+                       el.querySelector('enclosure')?.getAttribute('url') || '';
+
+      return { title, desc, link, source, pubDate, img: mediaUrl };
+    });
+  } catch(e) {
+    return [];
+  }
+}
+
+function renderNewsCards(items) {
+  const gridEl = document.getElementById('news-grid');
+  gridEl.innerHTML = items.map(item => {
+    const link    = item.link || '#';
+    const pubDate = item.pubDate
+      ? new Date(item.pubDate).toLocaleDateString('zh-TW',
+          { month:'numeric', day:'numeric', hour:'2-digit', minute:'2-digit' })
+      : '';
+
+    return `
+      <div class="news-card" onclick="window.open('${link.replace(/'/g,"\'")}','_blank')">
+        <div class="news-card-img">
+          ${item.img
+            ? `<img src="${esc(item.img)}" alt="" loading="lazy"
+                onerror="this.parentNode.innerHTML='<span style=font-size:32px>📰</span>'">`
+            : '<span style="font-size:32px">📰</span>'}
+        </div>
+        <div class="news-card-body">
+          ${item.source ? `<div class="news-card-source">${esc(item.source)}</div>` : ''}
+          <div class="news-card-title">${esc(item.title)}</div>
+          ${item.desc ? `<div class="news-card-desc">${esc(item.desc)}</div>` : ''}
+          <div class="news-card-footer">
+            <span>${pubDate}</span>
+            <a href="${link}" target="_blank" onclick="event.stopPropagation()">閱讀全文 →</a>
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════════════════
+// REPORTS TAB  —  Google Sheets CSV
+// ══════════════════════════════════════════════════
+// Google Sheets CSV 欄位：
+//   period_type  : week | month
+//   period_label : 如「2025 W12」或「2025-03」
+//   title        : 報告標題
+//   summary      : 摘要（2-3句）
+//   content      : 完整內文（段落標題前加 ##，換行用實際換行符）
+//   risk_level   : high | mid | low
+//   tags         : 以逗號分隔的標籤，如「百貨,零售,景氣」
+
+let REPORTS = [];
+let currentReportTab = 'week';
+
+function renderReportsTab() {
+  renderReportList();
+}
+
+function switchReportTab(type) {
+  currentReportTab = type;
+  document.getElementById('rpt-tab-week').className  = 'rpt-tab-btn' + (type==='week'  ? ' rpt-tab-active' : '');
+  document.getElementById('rpt-tab-month').className = 'rpt-tab-btn' + (type==='month' ? ' rpt-tab-active' : '');
+  renderReportList();
+}
+
+async function loadReports() {
+  const rawUrl = document.getElementById('report-sheets-url').value.trim();
+  if (!rawUrl) { alert('請先貼上報告 Google Sheets CSV 連結'); return; }
+
+  let csvUrl = rawUrl;
+  const m = rawUrl.match(/\/spreadsheets\/d\//);
+  const m2 = rawUrl.match(/\/spreadsheets\/d\/([\w-]+)/);
+  if (m2) {
+    const gidMatch = rawUrl.match(/[#&?]gid=(\d+)/);
+    const gid = gidMatch ? gidMatch[1] : '0';
+    csvUrl = `https://docs.google.com/spreadsheets/d/${m2[1]}/export?format=csv&gid=${gid}`;
+  }
+
+  setReportStatus(false, '載入中…');
+  try {
+    const resp = await fetch(csvUrl);
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const text = await resp.text();
+    REPORTS = parseReportCSV(text);
+    if (!REPORTS.length) throw new Error('無法解析 CSV，請確認欄位名稱');
+    setReportStatus(true, `已載入 ${REPORTS.length} 份報告`);
+    renderReportList();
+  } catch(e) {
+    setReportStatus(false, '載入失敗：' + e.message);
+  }
+}
+
+function parseReportCSV(text) {
+  const lines = text.trim().split('\n');
+  if (lines.length < 2) return [];
+  const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g,'').toLowerCase());
+  const rows = [];
+  for (let i = 1; i < lines.length; i++) {
+    const vals = splitCSVLine(lines[i]);
+    const obj = {};
+    headers.forEach((h, idx) => { obj[h] = (vals[idx]||'').trim().replace(/^"|"$/g,''); });
+    if (obj.title || obj['標題']) {
+      rows.push({
+        period_type:  obj.period_type  || obj['期別類型'] || 'week',
+        period_label: obj.period_label || obj['期別標籤'] || '',
+        title:        obj.title        || obj['標題']     || '',
+        summary:      obj.summary      || obj['摘要']     || '',
+        content:      obj.content      || obj['內文']     || '',
+        risk_level:   obj.risk_level   || obj['風險等級'] || 'mid',
+        tags:         obj.tags         || obj['標籤']     || ''
+      });
+    }
+  }
+  return rows;
+}
+
+function loadSampleReports() {
+  REPORTS = [
+    {
+      period_type: 'week', period_label: '2025 W12',
+      title: '台灣零售業週報：春季百貨業績攀升，消費信心指數回溫',
+      summary: '本週台灣主要百貨公司春季特賣業績亮眼，美妝與精品品牌銷售較去年同期成長12%。消費信心指數連續第三週上升，顯示民眾對景氣看法趨於樂觀。',
+      content: `## 本週市場動態
+新光三越與SOGO百貨春季周年慶業績優於預期，精品時尚品類成長尤為突出，單周業績較去年同期增加12-15%。
+
+## 品牌進駐動向
+本週有3個國際美妝品牌宣布將於第二季入駐信義商圈，包含來自韓國的新興護膚品牌，顯示台灣市場持續受到國際品牌重視。
+
+## 消費者行為觀察
+線上預購後到店取貨（BOPIS）模式使用率較去年同期成長28%，顯示OMO全通路模式逐漸成熟。
+
+## 下週展望
+下週末為春假最後一個週末，預計人流量將有顯著提升，建議關注高雄及台中地區商場表現。`,
+      risk_level: 'low',
+      tags: '零售,百貨,美妝,精品,消費信心'
+    },
+    {
+      period_type: 'week', period_label: '2025 W11',
+      title: '中高端消費分化加劇，平價品牌搶占市場空間',
+      summary: '本週觀察到消費市場出現「K型分化」現象，頂級精品與平價快時尚雙雙成長，中價位品牌壓力持續增加。',
+      content: `## 消費分化趨勢
+K型消費分化持續加劇，精品類（CHANEL、HERMES）買氣依然穩健；同期間平價快時尚品牌如UNIQLO、H&M同店銷售亦上揚，中間價位品牌承壓明顯。
+
+## 風險提示
+匯率走弱對精品進口成本造成壓力，部分品牌已悄然調整定價，需持續追蹤消費反應。
+
+## 數據亮點
+週末客流量統計顯示，台北信義商圈單日最高達42萬人次，較上週末成長8%。`,
+      risk_level: 'mid',
+      tags: '消費分化,精品,快時尚,K型消費'
+    },
+    {
+      period_type: 'month', period_label: '2025-03',
+      title: '2025年3月產業分析報告：一季末衝刺與春節後消費復甦',
+      summary: '3月台灣零售業整體業績較去年同月成長8.3%，其中百貨業成長幅度達11.2%，高於預期；電商滲透率持續提升至38%，但實體通路韌性強勁。',
+      content: `## 總體市場概況
+3月份為一季末，百貨業普遍推出周年慶或清倉促銷，推升整體業績。全台主要百貨業者綜合業績較去年同月成長11.2%，優於業界預估的7-8%。
+
+## 重點指標回顧
+- 總零售業業績年成長率：+8.3%
+- 百貨業年成長率：+11.2%
+- 電商滲透率：38%（較去年+3.2ppt）
+- 消費者信心指數：87.3（較上月+2.1）
+
+## 主要風險因素
+1. 美中貿易緊張局勢對部分進口精品供應鏈造成不確定性
+2. 通膨壓力使中低收入族群消費能力受限
+3. 電商競爭加劇，部分實體品牌面臨通路費用上升壓力
+
+## 下季展望
+第二季進入春季促銷旺季，預計整體零售業將維持正成長趨勢，建議重點關注高端精品與美妝的表現，以及新進場品牌的市場適應情況。`,
+      risk_level: 'mid',
+      tags: '月報,業績,電商,消費信心,風險評估'
+    },
+    {
+      period_type: 'month', period_label: '2025-02',
+      title: '2025年2月產業分析報告：春節消費爆發，東部市場異軍突起',
+      summary: '農曆春節帶動2月消費高峰，全台百貨春節業績普遍優於預期，其中花蓮、台東等東部市場受惠觀光人潮，成長幅度高達18%，為近年最佳表現。',
+      content: `## 春節消費概況
+2025年春節假期（1月28日至2月4日）全台百貨業綜合業績年成長15.3%，創近5年新高。消費者除傳統年貨採買外，體驗消費（餐飲、娛樂）佔比明顯提升。
+
+## 地區分析
+- 台北市：成長8.2%（基期較高）
+- 高雄市：成長13.5%（受惠城市行銷活動）
+- 花蓮縣：成長18.0%（觀光人潮帶動）
+- 台中市：成長10.1%
+
+## 風險評估
+整體風險評估為「中低」，主要關注點在於春節後消費能否持續，以及國際局勢對進口品類的影響。`,
+      risk_level: 'low',
+      tags: '月報,春節,東部市場,觀光消費'
+    }
+  ];
+  setReportStatus(true, `已載入範例報告（${REPORTS.length} 份）`);
+  renderReportList();
+}
+
+function renderReportList() {
+  const listEl = document.getElementById('report-list');
+  if (!REPORTS.length) {
+    listEl.innerHTML = '<div class="empty-state">請載入報告資料來源，或點擊「範例」查看示範內容</div>';
+    document.getElementById('rpt-count').textContent = '';
+    return;
+  }
+
+  const filtered = REPORTS.filter(r => r.period_type === currentReportTab);
+  document.getElementById('rpt-count').textContent = `共 ${filtered.length} 份`;
+
+  if (!filtered.length) {
+    listEl.innerHTML = '<div class="empty-state">此期別暫無報告</div>';
+    return;
+  }
+
+  // Sort by period_label descending (newest first)
+  const sorted = [...filtered].sort((a,b) => b.period_label.localeCompare(a.period_label));
+
+  listEl.innerHTML = sorted.map((rpt, idx) => {
+    const riskLabel = {high:'高風險',mid:'中風險',low:'低風險'}[rpt.risk_level] || '中風險';
+    const riskClass = {high:'risk-high',mid:'risk-mid',low:'risk-low'}[rpt.risk_level] || 'risk-mid';
+    const tags = rpt.tags ? rpt.tags.split(',').map(t => t.trim()).filter(Boolean) : [];
+
+    // Format content: lines starting with ## become <h4>
+    const formattedContent = esc(rpt.content)
+      .split('\n')
+      .map(line => {
+        if (line.startsWith('## ')) return `<h4>${line.slice(3)}</h4>`;
+        if (line === '') return '<div class="report-divider"></div>';
+        return line;
+      })
+      .join('\n');
+
+    return `
+      <div class="report-card">
+        <div class="report-card-header" onclick="toggleReport(${idx})">
+          <span class="report-period-badge">${esc(rpt.period_label)}</span>
+          <div class="report-card-meta">
+            <div class="report-card-title">${esc(rpt.title)}</div>
+            <div class="report-card-summary">${esc(rpt.summary)}</div>
+            ${tags.length ? `<div class="report-card-tags">${tags.map(t=>`<span class="report-tag">${esc(t)}</span>`).join('')}</div>` : ''}
+          </div>
+          <span class="risk-badge ${riskClass}">${riskLabel}</span>
+          <span class="report-toggle" id="toggle-icon-${idx}">＋</span>
+        </div>
+        <div class="report-card-body" id="report-body-${idx}">
+          <div class="report-body-content">${formattedContent}</div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function toggleReport(idx) {
+  const body = document.getElementById(`report-body-${idx}`);
+  const icon = document.getElementById(`toggle-icon-${idx}`);
+  const isOpen = body.classList.toggle('open');
+  icon.textContent = isOpen ? '－' : '＋';
+}
+
+function setReportStatus(ok, msg) {
+  const dot = document.getElementById('rpt-dot');
+  dot.className = 'dot ' + (ok ? 'ok' : 'err');
+  document.getElementById('rpt-status').textContent = msg;
 }
 
 // ══════════════════════════════════════════════════
