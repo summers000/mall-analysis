@@ -338,7 +338,7 @@
   <div id="data-banner">
     <div class="dot" id="ds-dot"></div>
     <span id="ds-status">未連接資料來源</span>
-    <input type="text" id="sheets-url" placeholder="貼上 Google Sheets CSV 公開連結…" />
+    <input type="text" id="sheets-url" placeholder="貼上 Google Sheets CSV 連結（欄位：mall_name, store_name, brand_name, category, floor）" />
     <button onclick="loadFromSheets()">載入</button>
     <button class="btn-ghost btn" onclick="loadSampleData()" style="margin-left:0">範例資料</button>
   </div>
@@ -556,106 +556,100 @@
 const FLOORS = ['B2','B1','1F','2F','3F','4F','5F','6F','7F','8F','9F','10F'];
 
 const STORE_COORDS = [
-  {n:"新月廣場 LUNA PLAZA",lat:24.7541,lng:121.7483},
-  {n:"新光三越台北信義新天地",lat:25.0388,lng:121.5641},
-  {n:"新光三越台北站前店",lat:25.0462,lng:121.5138},
-  {n:"新光三越台北南西店",lat:25.0524,lng:121.5183},
-  {n:"新光三越台北天母店",lat:25.1118,lng:121.5289},
-  {n:"SOGO台北忠孝館",lat:25.0422,lng:121.5424},
-  {n:"SOGO台北復興館",lat:25.0411,lng:121.5406},
-  {n:"SOGO台北敦化館",lat:25.0399,lng:121.5456},
-  {n:"SOGO天母店",lat:25.1050,lng:121.5218},
-  {n:"遠東百貨信義A13",lat:25.0356,lng:121.5655},
-  {n:"微風台北復興",lat:25.0304,lng:121.5412},
-  {n:"微風松高",lat:25.0343,lng:121.5641},
-  {n:"微風南京",lat:25.0519,lng:121.5453},
-  {n:"微風信義",lat:25.0407,lng:121.5658},
-  {n:"微風台北車站",lat:25.0486,lng:121.5161},
-  {n:"微風南山",lat:25.0345,lng:121.5636},
-  {n:"統一時代台北店",lat:25.0352,lng:121.5647},
-  {n:"大葉高島屋",lat:25.1118,lng:121.5289},
-  {n:"台北101購物中心",lat:25.0341,lng:121.5610},
-  {n:"ATT 4 FUN",lat:25.0353,lng:121.5635},
-  {n:"京站時尚廣場",lat:25.0492,lng:121.5173},
-  {n:"美麗華百樂園",lat:25.0835,lng:121.5549},
-  {n:"誠品生活南西",lat:25.0524,lng:121.5183},
-  {n:"誠品生活松菸",lat:25.0447,lng:121.5587},
-  {n:"南港Lalaport",lat:25.0524,lng:121.6010},
-  {n:"明曜百貨",lat:25.0410,lng:121.5496},
-  {n:"BELLAVITA 寶麗廣場",lat:25.0396,lng:121.5652},
-  {n:"NOKE 忠泰樂生活",lat:25.0827,lng:121.5547},
-  {n:"遠東百貨板橋中山店",lat:25.0136,lng:121.4643},
-  {n:"環球購物中心新北中和",lat:25.0084,lng:121.4718},
-  {n:"環球購物中心板橋",lat:25.0136,lng:121.4643},
-  {n:"環球購物中心林口A9",lat:25.0706,lng:121.3638},
-  {n:"林口三井Outlet",lat:25.0706,lng:121.3638},
-  {n:"誠品生活新板",lat:25.0124,lng:121.4594},
-  {n:"裕隆城",lat:24.9795,lng:121.5424},
-  {n:"宏匯廣場 HONHUI PLAZA",lat:25.0597,lng:121.4470},
-  {n:"新光三越桃園站前店",lat:24.9900,lng:121.3104},
-  {n:"新光三越桃園大有店",lat:25.0231,lng:121.3110},
-  {n:"SOGO中壢店",lat:24.9649,lng:121.2366},
-  {n:"遠東百貨桃園店",lat:24.9901,lng:121.3107},
-  {n:"大江國際購物中心",lat:25.0010,lng:121.2261},
-  {n:"台茂購物中心",lat:25.0535,lng:121.2858},
-  {n:"環球購物中心桃園A8",lat:25.0606,lng:121.3675},
-  {n:"環球購物中心桃園A19",lat:25.0018,lng:121.1993},
-  {n:"桃園華泰名品城",lat:25.0142,lng:121.2106},
-  {n:"統領廣場 TONLIN PLAZA",lat:24.9910,lng:121.3101},
-  {n:"SOGO新竹店",lat:24.8096,lng:120.9729},
-  {n:"遠東百貨新竹店",lat:24.8020,lng:120.9624},
-  {n:"Big City遠東巨城",lat:24.8096,lng:120.9729},
-  {n:"遠東百貨竹北店",lat:24.8224,lng:121.0208},
-  {n:"新光三越台中中港店",lat:24.1648,lng:120.6409},
-  {n:"廣三SOGO台中店",lat:24.1553,lng:120.6592},
-  {n:"遠東百貨台中店",lat:24.1645,lng:120.6420},
-  {n:"中友百貨",lat:24.1522,lng:120.6825},
-  {n:"台中港三井Outlet",lat:24.2590,lng:120.5159},
-  {n:"台中Lalaport",lat:24.1342,lng:120.6897},
-  {n:"台中麗寶Outlet",lat:24.3246,lng:120.6976},
-  {n:"大魯閣新時代",lat:24.1359,lng:120.6853},
-  {n:"金典綠園道",lat:24.1537,lng:120.6611},
-  {n:"老虎城購物中心 Tiger City",lat:24.1642,lng:120.6355},
-  {n:"新光三越嘉義店",lat:23.4734,lng:120.4385},
-  {n:"遠東百貨嘉義店",lat:23.4727,lng:120.4386},
-  {n:"耐斯廣場購物中心",lat:23.4966,lng:120.4500},
-  {n:"新光三越台南新天地",lat:22.9869,lng:120.1957},
-  {n:"新光三越台南中山店",lat:22.9954,lng:120.2073},
-  {n:"遠東百貨台南公園店",lat:22.9954,lng:120.2073},
-  {n:"遠東百貨台南成功店",lat:22.9954,lng:120.2073},
-  {n:"台南三井Outlet",lat:22.9253,lng:120.2848},
-  {n:"FOCUS 時尚流行館",lat:22.9955,lng:120.2076},
-  {n:"南紡購物中心",lat:22.9913,lng:120.2303},
-  {n:"新光三越高雄三多店",lat:22.6143,lng:120.3067},
-  {n:"新光三越高雄左營店",lat:22.6891,lng:120.3078},
-  {n:"SKM Park 高雄草衙",lat:22.5826,lng:120.3268},
-  {n:"SOGO高雄店",lat:22.6141,lng:120.3035},
-  {n:"遠東百貨高雄店",lat:22.6128,lng:120.3017},
-  {n:"統一時代高雄店",lat:22.5949,lng:120.3032},
-  {n:"漢神百貨",lat:22.6258,lng:120.2884},
-  {n:"漢神巨蛋",lat:22.6890,lng:120.2980},
-  {n:"統一夢時代",lat:22.5949,lng:120.3032},
-  {n:"環球購物中心新左營",lat:22.6877,lng:120.3048},
-  {n:"高雄義大Outlet",lat:22.6929,lng:120.3164},
-  {n:"大統百貨",lat:22.6272,lng:120.3045},
-  {n:"遠東百貨花蓮店",lat:23.9783,lng:121.5971},
-  {n:"環球購物中心屏東",lat:22.6733,lng:120.4908},
-  {n:"屏東太平洋百貨",lat:22.6733,lng:120.4908}
+  {n:"新月廣場 LUNA PLAZA",         city:"宜蘭縣", lat:24.7541,lng:121.7483},
+  {n:"新光三越台北信義新天地",        city:"台北市", lat:25.0388,lng:121.5641},
+  {n:"新光三越台北站前店",            city:"台北市", lat:25.0462,lng:121.5138},
+  {n:"新光三越台北南西店",            city:"台北市", lat:25.0524,lng:121.5183},
+  {n:"新光三越台北天母店",            city:"台北市", lat:25.1118,lng:121.5289},
+  {n:"SOGO台北忠孝館",              city:"台北市", lat:25.0422,lng:121.5424},
+  {n:"SOGO台北復興館",              city:"台北市", lat:25.0411,lng:121.5406},
+  {n:"SOGO台北敦化館",              city:"台北市", lat:25.0399,lng:121.5456},
+  {n:"SOGO天母店",                  city:"台北市", lat:25.1050,lng:121.5218},
+  {n:"遠東百貨信義A13",              city:"台北市", lat:25.0356,lng:121.5655},
+  {n:"微風台北復興",                  city:"台北市", lat:25.0304,lng:121.5412},
+  {n:"微風松高",                      city:"台北市", lat:25.0343,lng:121.5641},
+  {n:"微風南京",                      city:"台北市", lat:25.0519,lng:121.5453},
+  {n:"微風信義",                      city:"台北市", lat:25.0407,lng:121.5658},
+  {n:"微風台北車站",                  city:"台北市", lat:25.0486,lng:121.5161},
+  {n:"微風南山",                      city:"台北市", lat:25.0345,lng:121.5636},
+  {n:"統一時代台北店",                city:"台北市", lat:25.0352,lng:121.5647},
+  {n:"大葉高島屋",                    city:"台北市", lat:25.1118,lng:121.5289},
+  {n:"台北101購物中心",              city:"台北市", lat:25.0341,lng:121.5610},
+  {n:"ATT 4 FUN",                   city:"台北市", lat:25.0353,lng:121.5635},
+  {n:"京站時尚廣場",                  city:"台北市", lat:25.0492,lng:121.5173},
+  {n:"美麗華百樂園",                  city:"台北市", lat:25.0835,lng:121.5549},
+  {n:"誠品生活南西",                  city:"台北市", lat:25.0524,lng:121.5183},
+  {n:"誠品生活松菸",                  city:"台北市", lat:25.0447,lng:121.5587},
+  {n:"南港Lalaport",                city:"台北市", lat:25.0524,lng:121.6010},
+  {n:"明曜百貨",                      city:"台北市", lat:25.0410,lng:121.5496},
+  {n:"BELLAVITA 寶麗廣場",          city:"台北市", lat:25.0396,lng:121.5652},
+  {n:"NOKE 忠泰樂生活",             city:"台北市", lat:25.0827,lng:121.5547},
+  {n:"遠東百貨板橋中山店",            city:"新北市", lat:25.0136,lng:121.4643},
+  {n:"環球購物中心新北中和",          city:"新北市", lat:25.0084,lng:121.4718},
+  {n:"環球購物中心板橋",              city:"新北市", lat:25.0136,lng:121.4643},
+  {n:"環球購物中心林口A9",           city:"新北市", lat:25.0706,lng:121.3638},
+  {n:"林口三井Outlet",               city:"新北市", lat:25.0706,lng:121.3638},
+  {n:"誠品生活新板",                  city:"新北市", lat:25.0124,lng:121.4594},
+  {n:"裕隆城",                        city:"新北市", lat:24.9795,lng:121.5424},
+  {n:"宏匯廣場 HONHUI PLAZA",       city:"新北市", lat:25.0597,lng:121.4470},
+  {n:"新光三越桃園站前店",            city:"桃園市", lat:24.9900,lng:121.3104},
+  {n:"新光三越桃園大有店",            city:"桃園市", lat:25.0231,lng:121.3110},
+  {n:"SOGO中壢店",                  city:"桃園市", lat:24.9649,lng:121.2366},
+  {n:"遠東百貨桃園店",                city:"桃園市", lat:24.9901,lng:121.3107},
+  {n:"大江國際購物中心",              city:"桃園市", lat:25.0010,lng:121.2261},
+  {n:"台茂購物中心",                  city:"桃園市", lat:25.0535,lng:121.2858},
+  {n:"環球購物中心桃園A8",           city:"桃園市", lat:25.0606,lng:121.3675},
+  {n:"環球購物中心桃園A19",          city:"桃園市", lat:25.0018,lng:121.1993},
+  {n:"桃園華泰名品城",                city:"桃園市", lat:25.0142,lng:121.2106},
+  {n:"統領廣場 TONLIN PLAZA",       city:"桃園市", lat:24.9910,lng:121.3101},
+  {n:"SOGO新竹店",                  city:"新竹市", lat:24.8096,lng:120.9729},
+  {n:"遠東百貨新竹店",                city:"新竹市", lat:24.8020,lng:120.9624},
+  {n:"Big City遠東巨城",             city:"新竹市", lat:24.8096,lng:120.9729},
+  {n:"遠東百貨竹北店",                city:"新竹市", lat:24.8224,lng:121.0208},
+  {n:"新光三越台中中港店",            city:"台中市", lat:24.1648,lng:120.6409},
+  {n:"廣三SOGO台中店",               city:"台中市", lat:24.1553,lng:120.6592},
+  {n:"遠東百貨台中店",                city:"台中市", lat:24.1645,lng:120.6420},
+  {n:"中友百貨",                      city:"台中市", lat:24.1522,lng:120.6825},
+  {n:"台中港三井Outlet",             city:"台中市", lat:24.2590,lng:120.5159},
+  {n:"台中Lalaport",                city:"台中市", lat:24.1342,lng:120.6897},
+  {n:"台中麗寶Outlet",               city:"台中市", lat:24.3246,lng:120.6976},
+  {n:"大魯閣新時代",                  city:"台中市", lat:24.1359,lng:120.6853},
+  {n:"金典綠園道",                    city:"台中市", lat:24.1537,lng:120.6611},
+  {n:"老虎城購物中心 Tiger City",    city:"台中市", lat:24.1642,lng:120.6355},
+  {n:"新光三越嘉義店",                city:"嘉義市", lat:23.4734,lng:120.4385},
+  {n:"遠東百貨嘉義店",                city:"嘉義市", lat:23.4727,lng:120.4386},
+  {n:"耐斯廣場購物中心",              city:"嘉義市", lat:23.4966,lng:120.4500},
+  {n:"新光三越台南新天地",            city:"台南市", lat:22.9869,lng:120.1957},
+  {n:"新光三越台南中山店",            city:"台南市", lat:22.9954,lng:120.2073},
+  {n:"遠東百貨台南公園店",            city:"台南市", lat:22.9954,lng:120.2073},
+  {n:"遠東百貨台南成功店",            city:"台南市", lat:22.9954,lng:120.2073},
+  {n:"台南三井Outlet",               city:"台南市", lat:22.9253,lng:120.2848},
+  {n:"FOCUS 時尚流行館",            city:"台南市", lat:22.9955,lng:120.2076},
+  {n:"南紡購物中心",                  city:"台南市", lat:22.9913,lng:120.2303},
+  {n:"新光三越高雄三多店",            city:"高雄市", lat:22.6143,lng:120.3067},
+  {n:"新光三越高雄左營店",            city:"高雄市", lat:22.6891,lng:120.3078},
+  {n:"SKM Park 高雄草衙",           city:"高雄市", lat:22.5826,lng:120.3268},
+  {n:"SOGO高雄店",                  city:"高雄市", lat:22.6141,lng:120.3035},
+  {n:"遠東百貨高雄店",                city:"高雄市", lat:22.6128,lng:120.3017},
+  {n:"統一時代高雄店",                city:"高雄市", lat:22.5949,lng:120.3032},
+  {n:"漢神百貨",                      city:"高雄市", lat:22.6258,lng:120.2884},
+  {n:"漢神巨蛋",                      city:"高雄市", lat:22.6890,lng:120.2980},
+  {n:"統一夢時代",                    city:"高雄市", lat:22.5949,lng:120.3032},
+  {n:"環球購物中心新左營",            city:"高雄市", lat:22.6877,lng:120.3048},
+  {n:"高雄義大Outlet",               city:"高雄市", lat:22.6929,lng:120.3164},
+  {n:"大統百貨",                      city:"高雄市", lat:22.6272,lng:120.3045},
+  {n:"遠東百貨花蓮店",                city:"花蓮縣", lat:23.9783,lng:121.5971},
+  {n:"環球購物中心屏東",              city:"屏東縣", lat:22.6733,lng:120.4908},
+  {n:"屏東太平洋百貨",                city:"屏東縣", lat:22.6733,lng:120.4908}
 ];
 
-const CITY_MALLS = {
-  "宜蘭縣":["新月廣場 LUNA PLAZA"],
-  "台北市":["新光三越台北信義新天地","新光三越台北站前店","新光三越台北南西店","新光三越台北天母店","SOGO台北忠孝館","SOGO台北復興館","SOGO台北敦化館","SOGO天母店","遠東百貨信義A13","微風台北復興","微風松高","微風南京","微風信義","微風台北車站","微風南山","統一時代台北店","大葉高島屋","台北101購物中心","ATT 4 FUN","京站時尚廣場","美麗華百樂園","誠品生活南西","誠品生活松菸","南港Lalaport","明曜百貨","BELLAVITA 寶麗廣場","NOKE 忠泰樂生活"],
-  "新北市":["遠東百貨板橋中山店","環球購物中心新北中和","環球購物中心板橋","環球購物中心林口A9","林口三井Outlet","誠品生活新板","裕隆城","宏匯廣場 HONHUI PLAZA"],
-  "桃園市":["新光三越桃園站前店","新光三越桃園大有店","SOGO中壢店","遠東百貨桃園店","大江國際購物中心","台茂購物中心","環球購物中心桃園A8","環球購物中心桃園A19","桃園華泰名品城","統領廣場 TONLIN PLAZA"],
-  "新竹市":["SOGO新竹店","遠東百貨新竹店","Big City遠東巨城","遠東百貨竹北店"],
-  "台中市":["新光三越台中中港店","廣三SOGO台中店","遠東百貨台中店","中友百貨","台中港三井Outlet","台中Lalaport","台中麗寶Outlet","大魯閣新時代","金典綠園道","老虎城購物中心 Tiger City"],
-  "嘉義市":["新光三越嘉義店","遠東百貨嘉義店","耐斯廣場購物中心"],
-  "台南市":["新光三越台南新天地","新光三越台南中山店","遠東百貨台南公園店","遠東百貨台南成功店","台南三井Outlet","FOCUS 時尚流行館","南紡購物中心"],
-  "高雄市":["新光三越高雄三多店","新光三越高雄左營店","SKM Park 高雄草衙","SOGO高雄店","遠東百貨高雄店","統一時代高雄店","漢神百貨","漢神巨蛋","統一夢時代","環球購物中心新左營","高雄義大Outlet","大統百貨"],
-  "花蓮縣":["遠東百貨花蓮店"],
-  "屏東市":["環球購物中心屏東","屏東太平洋百貨"]
-};
+// 由 STORE_COORDS 自動建立 store_name → city 的查詢表
+const STORE_CITY_MAP = {};
+STORE_COORDS.forEach(s => { STORE_CITY_MAP[s.n] = s.city; });
+
+// 所有已知城市（從 STORE_COORDS 推導）
+const ALL_CITIES = [...new Set(STORE_COORDS.map(s => s.city))].sort();
+
 
 // App state
 let DATA = { records:[], brands:[], mallNames:[], stores:[], cities:[], categories:[] };
@@ -664,9 +658,12 @@ let leafletMap = null, leafletMarkers = [];
 // ══════════════════════════════════════════════════
 // GOOGLE SHEETS CSV LOADER
 // ══════════════════════════════════════════════════
-// Expected CSV columns (case-insensitive):
-//   mall_name | city | brand_name | category | floor
-// Google Sheets → File → Share → Publish to web → CSV
+// CSV 欄位（不分大小寫，共 5 欄）：
+//   mall_name | store_name | brand_name | category | floor
+//   百貨品牌   | 分店名稱   | 專櫃品牌   | 品牌分類  | 樓層
+//
+// ★ city 欄不需要填！程式會自動從分店名稱對應城市。
+// Google Sheets → 檔案 → 共用 → 發布到網路 → CSV
 
 async function loadFromSheets() {
   const rawUrl = document.getElementById('sheets-url').value.trim();
@@ -709,11 +706,13 @@ function parseCSV(text) {
     headers.forEach((h, idx) => { obj[h] = (vals[idx] || '').trim().replace(/^"|"$/g,''); });
     if (obj.brand_name || obj['品牌名稱'] || obj['brand']) {
       // Normalize column names
+      const storeName = obj.store_name || obj['分店'] || obj['店名'] || '';
       rows.push({
-        mall_name:  obj.mall_name  || obj['百貨品牌'] || obj['mall_name'] || '',
-        store_name: obj.store_name || obj['分店']     || obj['store_name'] || obj['店名'] || '',
-        city:       obj.city       || obj['城市']     || obj['縣市'] || '',
-        brand_name: obj.brand_name || obj['品牌名稱'] || obj['brand'] || '',
+        mall_name:  obj.mall_name  || obj['百貨品牌'] || obj['連鎖品牌'] || '',
+        store_name: storeName,
+        // city 自動從 STORE_CITY_MAP 查詢，CSV 不需要此欄
+        city:       STORE_CITY_MAP[storeName] || obj.city || obj['城市'] || obj['縣市'] || '',
+        brand_name: obj.brand_name || obj['品牌名稱'] || obj['品牌'] || '',
         category:   obj.category   || obj['分類']     || obj['品牌分類'] || '其他',
         floor:      obj.floor      || obj['樓層']     || ''
       });
@@ -798,12 +797,12 @@ function generateSample() {
     "服務門市": ['1F','B1','4F']
   };
 
-  const allMalls = Object.values(CITY_MALLS).flat();
   const records = [];
   const r = Math.random;
 
+  const allMalls = [...new Set(STORE_COORDS.map(s => s.n))];
   allMalls.forEach(mall => {
-    const city = Object.entries(CITY_MALLS).find(([,ms]) => ms.includes(mall))?.[0] || '';
+    const city = STORE_CITY_MAP[mall] || '';
     let quota = 50;
     if (mall.includes('信義') || mall.includes('101') || mall.includes('南山')) quota = 80 + Math.floor(r()*20);
     else if (mall.includes('SOGO') || mall.includes('新光三越')) quota = 60 + Math.floor(r()*20);
@@ -864,18 +863,23 @@ function populateAllDropdowns() {
 
 function updateSearchMallDrop() {
   const city = document.getElementById('s-city').value;
+  // Filter mall_name list by city via STORE_CITY_MAP
   const mallNames = city
-    ? [...new Set(DATA.records.filter(r => r.city === city).map(r => r.mall_name))].sort()
+    ? [...new Set(
+        DATA.records
+          .filter(r => (STORE_CITY_MAP[r.store_name] || r.city) === city)
+          .map(r => r.mall_name)
+      )].sort()
     : DATA.mallNames;
   fillSelect('s-mallname', mallNames, '全部百貨');
   updateSearchStoreDrop();
 }
 
 function updateSearchStoreDrop() {
-  const city = document.getElementById('s-city').value;
+  const city     = document.getElementById('s-city').value;
   const mallName = document.getElementById('s-mallname').value;
   let rows = DATA.records;
-  if (city)     rows = rows.filter(r => r.city === city);
+  if (city)     rows = rows.filter(r => (STORE_CITY_MAP[r.store_name] || r.city) === city);
   if (mallName) rows = rows.filter(r => r.mall_name === mallName);
   const stores = [...new Set(rows.map(r => r.store_name))].sort();
   fillSelect('s-store', stores, '全部分店');
@@ -1107,10 +1111,7 @@ function renderMap() {
 
     if (selBrand) rows = rows.filter(r => r.brand_name === selBrand);
     if (selFloor) rows = rows.filter(r => r.floor === selFloor);
-    if (selCity) {
-      const storeCity = DATA.records.find(r => r.store_name === store.n || r.mall_name === store.n)?.city || '';
-      if (storeCity !== selCity) return;
-    }
+    if (selCity && store.city !== selCity) return;
 
     const cnt = new Set(rows.map(r=>r.brand_name)).size;
     rows.forEach(r => totalBrands.add(r.brand_name));
@@ -1129,7 +1130,7 @@ function renderMap() {
 
     const marker = L.marker([store.lat,store.lng],{icon})
       .bindPopup(`<b>${store.n}</b><br>
-        <span style='color:#475569;font-size:12px'>${rows[0]?.mall_name||''}</span><br>
+        <span style='color:#475569;font-size:12px'>${rows[0]?.mall_name||''} ‧ ${store.city}</span><br>
         品牌數：<b>${cnt}</b>　專櫃筆數：${rows.length}`)
       .addTo(leafletMap);
     leafletMarkers.push(marker);
