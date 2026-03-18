@@ -595,7 +595,7 @@ async function generateFullReport() {
   const prompt = '今天是 ' + today + '。請分析以下零售業新聞：\n\n' + newsText;
 
   try {
-    const clean = await geminiCall(prompt, 'gemini-1.5-flash-latest',
+    const clean = await geminiCall(prompt, 'gemini-2.0-flash',
       { responseMimeType: 'application/json', temperature: 0.5, maxOutputTokens: 800 }, system);
     const data = JSON.parse(clean);
     renderFullReport(data);
@@ -763,8 +763,7 @@ function renderCards(items) {
       JSON.stringify(item.title) + ',' + JSON.stringify(item.desc||'') + ')">AI 報告分析</button></div>';
   }
 
-  var html = '<div class="news-hero-card selected" id="nc-0" onclick="selectCardById(0,' +
-    JSON.stringify(hero.title) + ',' + JSON.stringify(hero.desc||'') + ')">' +
+  var html = '<div class="news-hero-card selected" id="nc-0" onclick="openNewsLink(' + JSON.stringify(hero.link||'') + ')">' +
     imgBlock(hero.img, true) +
     '<div class="news-hero-body">' +
     '<span class="news-hero-rank">#1</span>' +
@@ -780,8 +779,7 @@ function renderCards(items) {
     rest.slice(rs, rs+3).forEach(function(item, ri) {
       var i = rs + ri + 1;
       var cat = item.category || CARD_CATS[i % CARD_CATS.length];
-      html += '<div class="news-card" id="nc-' + i + '" onclick="selectCardById(' + i + ',' +
-        JSON.stringify(item.title) + ',' + JSON.stringify(item.desc||'') + ')">' +
+      html += '<div class="news-card" id="nc-' + i + '" onclick="openNewsLink(' + JSON.stringify(item.link||'') + ')">' +
         '<div class="news-card-rank">#' + (i+1) + '</div>' +
         imgBlock(item.img, false) +
         '<div class="news-card-body">' +
@@ -805,9 +803,17 @@ function selectCard(idx, item) {
   document.getElementById('nc-' + idx)?.classList.add('selected');
   const text = [item.title, item.desc].filter(Boolean).join('\n\n');
   document.getElementById('newsInput').value = text;
-  // 捲動到焦點分析區（hero-section）
-  const hero = document.querySelector('.hero-section');
-  if (hero) hero.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  // 捲動到焦點分析區
+  setTimeout(() => {
+    const hero = document.querySelector('.hero-section');
+    if (hero) {
+      hero.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, 50);
+}
+
+function openNewsLink(url) {
+  if (url) window.open(url, '_blank');
 }
 
 function openGoogleNews() {
