@@ -355,7 +355,7 @@ html, body {
       <h2>本週全球零售十大新聞</h2>
       <div class="news-ctrl">
         <input type="text" id="newsApiKeyInput"
-          placeholder="Currents API Key"
+          placeholder="World News API Key"
           autocomplete="off"
           style="padding:7px 12px;border:1px solid var(--border);font-family:var(--font);
             font-size:13px;background:var(--card);color:var(--text);min-width:180px;">
@@ -474,12 +474,12 @@ let GEMINI_API_KEY  = '';  // Google AI Studio 的 Gemini Key
 // ════════════════════════════════════════
 function saveNewsApiKey() {
   const val = document.getElementById('newsApiKeyInput').value.trim();
-  if (!val) { alert('請輸入 Currents API Key'); return; }
+  if (!val) { alert('請輸入 World News API Key'); return; }
   NEWS_API_KEY = val;
   const inp = document.getElementById('newsApiKeyInput');
   const btn = document.getElementById('newsKeyConfirmBtn');
   inp.value = '';
-  inp.placeholder = 'Currents Key 已設定 ✓';
+  inp.placeholder = 'World News Key 已設定 ✓';
   inp.disabled = true;
   inp.style.opacity = '.6';
   btn.textContent = '重設';
@@ -493,7 +493,7 @@ function resetNewsApiKey() {
   NEWS_API_KEY = '';
   const inp = document.getElementById('newsApiKeyInput');
   const btn = document.getElementById('newsKeyConfirmBtn');
-  inp.placeholder = 'Currents API Key';
+  inp.placeholder = 'World News API Key';
   inp.disabled = false;
   inp.style.opacity = '1';
   btn.textContent = '確認';
@@ -732,7 +732,7 @@ async function loadNews() {
 
     const articles = merged;
     if (dataZh.status === 'error' && dataEn.status === 'error')
-      throw new Error(dataZh.message || 'Currents API 錯誤');
+      throw new Error(dataZh.message || 'World News API 錯誤');
 
     const normalized = articles.slice(0, 10).map((a, i) => ({
       title:    a.title || '',
@@ -867,7 +867,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (NEWS_API_KEY) {
     const inp = document.getElementById('newsApiKeyInput');
     const btn = document.getElementById('newsKeyConfirmBtn');
-    inp.placeholder = 'Currents Key 已預設 ✓';
+    inp.placeholder = 'World News Key 已預設 ✓';
     inp.disabled = true; inp.style.opacity = '.6';
     btn.textContent = '重設'; btn.onclick = resetNewsApiKey;
     const fb = document.getElementById('fetchNewsBtn');
