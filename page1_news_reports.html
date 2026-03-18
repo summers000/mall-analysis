@@ -595,7 +595,7 @@ async function generateFullReport() {
   const prompt = '今天是 ' + today + '。請分析以下零售業新聞：\n\n' + newsText;
 
   try {
-    const clean = await geminiCall(prompt, 'gemini-1.5-flash',
+    const clean = await geminiCall(prompt, 'gemini-1.5-flash-latest',
       { responseMimeType: 'application/json', temperature: 0.5, maxOutputTokens: 800 }, system);
     const data = JSON.parse(clean);
     renderFullReport(data);
@@ -760,7 +760,7 @@ function renderCards(items) {
     return '<div class="news-card-footer"><span>' + escT(item.source||'') + ' ' +
       (item.pubDate ? new Date(item.pubDate).toLocaleDateString('zh-TW',{month:'numeric',day:'numeric'}) : '') +
       '</span><button class="news-card-analyze" onclick="event.stopPropagation();selectCardById(' + idx + ',' +
-      JSON.stringify(item.title) + ',' + JSON.stringify(item.desc||'') + ')">AI 分析</button></div>';
+      JSON.stringify(item.title) + ',' + JSON.stringify(item.desc||'') + ')">AI 報告分析</button></div>';
   }
 
   var html = '<div class="news-hero-card selected" id="nc-0" onclick="selectCardById(0,' +
@@ -805,8 +805,9 @@ function selectCard(idx, item) {
   document.getElementById('nc-' + idx)?.classList.add('selected');
   const text = [item.title, item.desc].filter(Boolean).join('\n\n');
   document.getElementById('newsInput').value = text;
-  // 捲動到分析區，等使用者手動點「產生分析報告」
-  document.getElementById('content-area').scrollTo({ top: 500, behavior: 'smooth' });
+  // 捲動到焦點分析區（hero-section）
+  const hero = document.querySelector('.hero-section');
+  if (hero) hero.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 function openGoogleNews() {
