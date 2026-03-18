@@ -703,28 +703,36 @@ async function loadNews() {
   statusEl.textContent = '抓取新聞中…';
   gridEl.innerHTML = '<div class="empty-state">載入新聞中，請稍候…</div>';
 
-  // 計算日期範圍
-  const from = new Date();
-  from.setDate(from.getDate() - days);
-  const fromStr = from.toISOString().split('T')[0];
-
-  // Currents API — 明確支援瀏覽器直接呼叫（CORS 開放）
+  // Currents API — 先抓中文，不夠再補英文
   // 免費方案：每天 600 次請求
-  const keywords = 'retail ecommerce fashion consumer brand';
-  const url = 'https://api.currentsapi.services/v1/search' +
-    '?keywords=' + encodeURIComponent(keywords) +
+  const kwZh = '零售 百貨 電商 超市 購物';
+  const kwEn = 'retail supermarket ecommerce fashion FMCG mall';
+  const urlZh = 'https://api.currentsapi.services/v1/search' +
+    '?keywords=' + encodeURIComponent(kwZh) +
+    '&language=zh' +
+    '&page_size=10' +
+    '&apiKey=' + NEWS_API_KEY;
+  const urlEn = 'https://api.currentsapi.services/v1/search' +
+    '?keywords=' + encodeURIComponent(kwEn) +
     '&language=en' +
-    '&start_date=' + fromStr + 'T00:00:00+00:00' +
     '&page_size=10' +
     '&apiKey=' + NEWS_API_KEY;
 
   try {
-    const resp = await fetch(url);
-    const data = await resp.json();
+    // 中文優先，不足 5 則才補英文
+    const [respZh, respEn] = await Promise.all([fetch(urlZh), fetch(urlEn)]);
+    const [dataZh, dataEn] = await Promise.all([respZh.json(), respEn.json()]);
 
-    if (data.status === 'error') throw new Error(data.message || 'Currents API 錯誤');
-    const articles = data.news || [];
-    if (!articles.length) throw new Error('找不到相關新聞，請調整時間範圍');
+    const zhArticles = (dataZh.news || []);
+    const enArticles = (dataEn.news || []);
+
+    // 中文放前面，英文補後面，合計取 10 則
+    const merged = [...zhArticles, ...enArticles].slice(0, 10);
+    if (!merged.length) throw new Error('找不到相關新聞，請稍後再試');
+
+    const articles = merged;
+    if (dataZh.status === 'error' && dataEn.status === 'error')
+      throw new Error(dataZh.message || 'Currents API 錯誤');
 
     const normalized = articles.slice(0, 10).map((a, i) => ({
       title:    a.title || '',
@@ -738,7 +746,7 @@ async function loadNews() {
 
     cachedNewsItems = normalized;  // 快取供產生報告使用
     renderCards(normalized);
-    statusEl.textContent = '共 ' + normalized.length + ' 則  ·  Currents API  ·  ' + new Date().toLocaleString('zh-TW');
+    statusEl.textContent = '共 ' + normalized.length + ' 則（中文優先）·  Currents API  ·  ' + new Date().toLocaleString('zh-TW');
 
     // 高亮第一則，帶入分析框
     document.querySelectorAll('.news-card, .news-hero-card').forEach(c => c.classList.remove('selected'));
