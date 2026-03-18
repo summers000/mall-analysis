@@ -128,13 +128,7 @@ html, body {
 }
 #newsInput::placeholder { color: rgba(255,255,255,.38); }
 #newsInput:focus { outline: none; border-color: var(--brick-light); }
-#analyzeBtn {
-  margin-top: 12px; background: var(--brick); color: #fff;
-  border: none; padding: 10px 24px;
-  font-family: var(--font); font-size: 14px; font-weight: 700;
-  cursor: pointer; border-radius: var(--r-sm); transition: background .15s;
-}
-#analyzeBtn:hover { background: var(--brick-light); }
+
 
 /* ════════════════════════════
    STRATEGY SECTION
@@ -414,13 +408,10 @@ html, body {
         <div id="dailyHeadline">等待 AI 回應…</div>
         <textarea id="newsInput"
           placeholder="點擊上方新聞卡片自動帶入，或手動貼上新聞內容進行分析…"></textarea>
-        <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
-          <button id="analyzeBtn" style="flex:1">📌 單則焦點分析</button>
-          <button id="reportBtn" onclick="generateFullReport()"
-            style="flex:1;background:var(--navy);color:#fff;border:none;
-              padding:10px 16px;font-family:var(--font);font-size:14px;
-              font-weight:700;cursor:pointer;">📊 產生分析報告</button>
-        </div>
+        <button id="reportBtn" onclick="generateFullReport()"
+          style="width:100%;margin-top:12px;background:var(--navy);color:#fff;border:none;
+            padding:12px 16px;font-family:var(--font);font-size:14px;
+            font-weight:700;cursor:pointer;letter-spacing:.02em;">📊 產生分析報告</button>
       </div>
     </div>
   </section>
@@ -574,30 +565,6 @@ async function callGemini(prompt) {
 }
 
 // ════════════════════════════════════════
-// 單則焦點分析
-// ════════════════════════════════════════
-async function startAnalysis(input) {
-  if (!GEMINI_API_KEY) { setDiag('請先填入 Gemini API Key', true); return; }
-  const loader = document.getElementById('mainLoader');
-  loader.classList.remove('hidden');
-  setStatus('分析執行中…');
-  const today = new Date().toLocaleDateString('zh-TW');
-  const nl = '\n\n';
-  const prompt = input
-    ? ('分析以下零售新聞，今日：' + today + nl + input)
-    : ('今天是 ' + today + '。請根據全球零售業最新動態，生成市場分析。');
-  try {
-    const result = await callGemini(prompt);
-    renderResult(result);
-    setStatus('分析完成');
-    setDiag('狀態：正常 · ' + new Date().toLocaleTimeString('zh-TW'));
-  } catch(err) {
-    setStatus('分析失敗');
-    setDiag('錯誤：' + escT(err.message), true);
-    document.getElementById('dailyHeadline').innerHTML =
-      '<span style="color:rgba(255,120,100,.9);font-size:13px">' + escT(err.message) + '</span>';
-  } finally { loader.classList.add('hidden'); }
-}
 
 // ════════════════════════════════════════
 // 產生完整分析報告（一次分析全部 10 則）
@@ -609,34 +576,30 @@ async function generateFullReport() {
   if (!cachedNewsItems.length) { alert('請先抓取新聞'); return; }
 
   const btn = document.getElementById('reportBtn');
-  btn.textContent = '⏳ 報告生成中…';
+  btn.textContent = '⏳ 分析中…';
   btn.disabled = true;
 
-  const newsSummary = cachedNewsItems.map((n, i) =>
-    (i+1) + '. [' + (n.category||'零售') + '] ' + n.title + '：' + n.desc
-  ).join('\n');
+  // 用 textarea 裡的內容（使用者選中的那則新聞）
+  const newsText = document.getElementById('newsInput').value.trim();
+  if (!newsText) { alert('請先點選一則新聞'); btn.disabled = false; btn.textContent = '📊 產生分析報告'; return; }
 
   const today = new Date().toLocaleDateString('zh-TW');
-  const system = '你是資深零售產業策略顧問，擅長全球零售市場分析與台灣市場洞察。' +
-    '請以純 JSON 格式回覆，不加 markdown：' +
-    '{"report_title":"報告標題",' +
-    '"executive_summary":"執行摘要（150字）",' +
+  const system = '你是零售產業策略顧問。純 JSON 回覆，不加 markdown：' +
+    '{"report_title":"分析標題",' +
+    '"executive_summary":"新聞摘要與市場意涵（100字）",' +
     '"key_themes":["主題1","主題2","主題3"],' +
-    '"risk_assessment":{"high":["高風險項目"],"medium":["中風險項目"],"low":["低風險項目"]},' +
-    '"taiwan_impact":"對台灣零售市場的影響分析（100字）",' +
-    '"three_year_outlook":"未來三年趨勢預測（120字）",' +
-    '"strategic_recommendations":["建議1","建議2","建議3","建議4"]}' +
+    '"taiwan_impact":"對台灣零售市場的影響（80字）",' +
+    '"strategic_recommendations":["建議1","建議2","建議3"]}' +
     '語言：繁體中文。';
 
-  const nl2 = '\n\n';
-  const prompt = '今天是 ' + today + '。以下是本週全球零售業十大新聞：' + nl2 + newsSummary + '\n\n請根據這 10 則新聞，產生一份深度產業分析報告，包含執行摘要、核心主題、風險評估、台灣市場影響、三年趨勢預測、策略建議。';
+  const prompt = '今天是 ' + today + '。請分析以下零售業新聞：\n\n' + newsText;
 
   try {
-    const clean = await geminiCall(prompt, 'gemini-2.0-flash',
-      { responseMimeType: 'application/json', temperature: 0.6, maxOutputTokens: 2048 }, system);
+    const clean = await geminiCall(prompt, 'gemini-1.5-flash',
+      { responseMimeType: 'application/json', temperature: 0.5, maxOutputTokens: 800 }, system);
     const data = JSON.parse(clean);
     renderFullReport(data);
-    btn.textContent = '📊 重新產生報告';
+    btn.textContent = '📊 重新產生';
   } catch(err) {
     alert('報告生成失敗：' + err.message);
     btn.textContent = '📊 產生分析報告';
@@ -644,17 +607,14 @@ async function generateFullReport() {
 }
 
 function renderFullReport(d) {
-  // 填入焦點分析區
   document.getElementById('dailyHeadline').textContent = '「' + (d.report_title || '本週零售產業分析報告') + '」';
-  document.getElementById('competitionContent').textContent = d.executive_summary || '—';
+  document.getElementById('competitionContent').textContent =
+    (d.executive_summary || '') + (d.taiwan_impact ? '\n\n🇹🇼 台灣市場：' + d.taiwan_impact : '');
 
-  // 填入趨勢區
-  const themes = (d.key_themes || []).concat(d.three_year_outlook ? ['三年展望：' + d.three_year_outlook] : []);
-  document.getElementById('trendsList').innerHTML = themes.map(t =>
+  document.getElementById('trendsList').innerHTML = (d.key_themes || []).map(t =>
     '<li><span class="bullet">#</span><span>' + escT(t) + '</span></li>'
   ).join('');
 
-  // 建議
   document.getElementById('recommendationContent').textContent =
     (d.strategic_recommendations || []).map((r,i) => (i+1) + '. ' + r).join('\n');
 
@@ -681,9 +641,7 @@ function renderResult(data) {
   document.getElementById('recommendationContent').textContent = data.recommendations || '—';
 }
 
-document.getElementById('analyzeBtn').addEventListener('click', () => {
-  startAnalysis(document.getElementById('newsInput').value.trim() || null);
-});
+// analyzeBtn removed
 
 // ════════════════════════════════════════
 // NEWSAPI — 抓取真實新聞
@@ -847,8 +805,8 @@ function selectCard(idx, item) {
   document.getElementById('nc-' + idx)?.classList.add('selected');
   const text = [item.title, item.desc].filter(Boolean).join('\n\n');
   document.getElementById('newsInput').value = text;
+  // 捲動到分析區，等使用者手動點「產生分析報告」
   document.getElementById('content-area').scrollTo({ top: 500, behavior: 'smooth' });
-  startAnalysis(text);
 }
 
 function openGoogleNews() {
