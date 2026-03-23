@@ -3,776 +3,322 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>百貨專櫃分析 — 地圖與競爭</title>
+<title>百貨分析 — 地圖與競爭</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <style>
-  /* ══════════════════════════════════════════════
-     深藍 + 磚紅 顧問風格設計系統
-     色調：莊重、專業、有溫度的商業分析工具
-  ══════════════════════════════════════════════ */
-
-  /* ── Reset ── */
+  /* ══ Plaid-style Design System ══ */
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-  /* ── Design Tokens ── */
   :root {
-    /* 主色調 */
-    --primary:      #0F2B63;   /* 深藍 */
-    --primary-dark: #091C45;   /* 更深藍（hover） */
-    --primary-mid:  #1A3A7A;   /* 中深藍（次要底色） */
-    --accent:       #A2543B;   /* 磚紅 */
-    --accent-light: #C4715A;   /* 磚紅淺版（hover） */
-    --accent-pale:  #F5EDE9;   /* 磚紅極淡（tag背景） */
-
-    /* 中性色 */
-    --bg:           #F5F0EA;   /* 米色背景 */
-    --card:         #FFFFFF;   /* 白卡片 */
-    --border:       #DDD7CE;   /* 米色系邊框 */
-    --border-light: #EDE8E0;   /* 極淡邊框 */
-    --text-primary: #1A1A2E;   /* 主要文字 */
-    --text-secondary:#5C5C72;  /* 次要文字 */
-    --text-muted:   #9B96A3;   /* 提示文字 */
-
-    /* 功能色 */
-    --success:      #2D7D52;
-    --error:        #B03A2E;
-    --info:         #1A5276;
-
-    /* 排版 */
-    --font-body: 'Noto Sans TC', '微軟正黑體', 'Microsoft JhengHei', 'Heiti TC', sans-serif;
+    --red:       #FF3D2E;
+    --red-dark:  #D42D1F;
+    --red-pale:  #FFF0EE;
+    --black:     #111111;
+    --gray-900:  #222222;
+    --gray-700:  #444444;
+    --gray-500:  #777777;
+    --gray-300:  #CCCCCC;
+    --gray-100:  #F5F5F5;
+    --white:     #FFFFFF;
+    --blue-dot:  #1650FF;
+    --font-display: 'Noto Sans TC', 'Microsoft JhengHei', Helvetica, Arial, sans-serif;
     --font-mono: 'DM Mono', 'Courier New', monospace;
-
-    /* 間距與圓角 */
-    --radius-sm: 0px;
-    --radius:    0px;
-    --radius-lg: 0px;
-
-    /* 陰影 */
-    --shadow-sm: 0 1px 4px rgba(15,43,99,.08);
-    --shadow:    0 2px 12px rgba(15,43,99,.10);
-    --shadow-md: 0 4px 20px rgba(15,43,99,.13);
+    --success: #1a8a4a;
+    --error:   #FF3D2E;
   }
 
-  /* ── Base ── */
   html, body {
-    font-family: var(--font-body);
-    font-size: 16px;           /* 內文 16px */
-    line-height: 1.6;
-    background: var(--bg);
-    color: var(--text-primary);
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
+    font-family: var(--font-display);
+    font-size: 15px; line-height: 1.6;
+    background: var(--white); color: var(--black);
     -webkit-font-smoothing: antialiased;
   }
 
-  /* ── Typography ── */
-  h1 { font-size: 36px; font-weight: 700; line-height: 1.2; }
-  h2 { font-size: 24px; font-weight: 600; line-height: 1.3; }
-  h3 { font-size: 20px; font-weight: 500; line-height: 1.4; }
+  /* ── App shell ── */
+  #app-root { display: flex; flex-direction: column; width: 100%; height: 100vh; overflow: hidden; }
 
-  /* ── App Root ── */
-  #app-root {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-    height: 100vh;
-    overflow: hidden;
+  /* ── Loading overlay ── */
+  #loading-overlay {
+    position: fixed; inset: 0; background: rgba(255,255,255,.92);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center; z-index: 9999; gap: 14px;
   }
+  .spinner {
+    width: 32px; height: 32px;
+    border: 3px solid var(--gray-300); border-top-color: var(--red);
+    border-radius: 50%; animation: spin .7s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  #loading-overlay p { color: var(--gray-500); font-size: 13px; letter-spacing: .06em; }
 
-  /* ── Header ── */
+  /* ── Tab header ── */
   #app-header {
-    background: var(--primary);
-    color: #FFFFFF;
-    padding: 0 24px;
-    flex-shrink: 0;
-    z-index: 100;
-    border-bottom: 3px solid var(--accent);
-    box-shadow: 0 2px 16px rgba(15,43,99,.30);
+    background: var(--black); flex-shrink: 0;
+    border-bottom: 3px solid var(--red);
+    padding: 0 32px; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
   }
-
-  /* ── Tab Bar ── */
+  .header-logo {
+    font-size: 12px; font-weight: 700; letter-spacing: .12em;
+    color: var(--white); text-transform: uppercase; white-space: nowrap;
+    padding: 14px 0;
+  }
   #tab-bar {
-    display: flex;
-    gap: 0;
-    overflow-x: auto;
-    scrollbar-width: none;
-    padding-top: 6px;
+    display: flex; gap: 0; overflow-x: auto;
+    scrollbar-width: none; padding-top: 0;
   }
   #tab-bar::-webkit-scrollbar { display: none; }
-
   .tab-btn {
-    white-space: nowrap;
-    padding: 10px 18px;
-    font-size: 14px;
-    font-family: var(--font-body);
-    font-weight: 500;
-    background: transparent;
-    color: rgba(255,255,255,.55);
-    border: none;
-    border-bottom: 3px solid transparent;
-    cursor: pointer;
-    transition: color .18s, border-color .18s, background .18s;
-    letter-spacing: .02em;
-    margin-bottom: -3px;        /* 蓋住 header border-bottom */
+    white-space: nowrap; padding: 14px 18px;
+    font-size: 11px; font-family: var(--font-display);
+    font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+    background: transparent; color: rgba(255,255,255,.45);
+    border: none; border-bottom: 3px solid transparent;
+    cursor: pointer; transition: color .15s, border-color .15s;
+    margin-bottom: -3px;
   }
-  .tab-btn:hover {
-    color: rgba(255,255,255,.90);
-    background: rgba(255,255,255,.06);
-  }
-  .tab-btn.active {
-    color: #FFFFFF;
-    border-bottom-color: var(--accent);
-    background: rgba(255,255,255,.05);
-    font-weight: 700;
-  }
+  .tab-btn:hover { color: rgba(255,255,255,.85); }
+  .tab-btn.active { color: var(--white); border-bottom-color: var(--red); }
 
-  /* ── Content Shell ── */
+  /* ── Content area ── */
   #content-area {
-    flex: 1;
-    overflow-y: auto;
-    overflow-x: hidden;
-    padding: 20px 24px;
-    scrollbar-width: thin;
-    scrollbar-color: var(--border) transparent;
-    background: var(--bg);
+    flex: 1; overflow-y: auto; overflow-x: hidden;
+    scrollbar-width: thin; scrollbar-color: var(--gray-300) transparent;
   }
-  #content-area::-webkit-scrollbar { width: 5px; }
-  #content-area::-webkit-scrollbar-track { background: transparent; }
-  #content-area::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
-
+  #content-area::-webkit-scrollbar { width: 4px; }
+  #content-area::-webkit-scrollbar-thumb { background: var(--gray-300); }
   .section { display: none; }
   .section.active { display: block; }
 
-  /* ── Loading Overlay ── */
-  #loading-overlay {
-    position: fixed; inset: 0;
-    background: rgba(245,240,234,.92);
-    display: flex; flex-direction: column;
-    align-items: center; justify-content: center;
-    z-index: 9999; gap: 14px;
+  /* ── Data Banner ── */
+  #data-banner {
+    background: var(--gray-100); border-bottom: 1px solid var(--gray-300);
+    padding: 10px 32px; display: flex; align-items: center; gap: 10px;
+    font-size: 12px; color: var(--gray-700); flex-wrap: wrap;
   }
-  .spinner {
-    width: 36px; height: 36px;
-    border: 3px solid var(--border);
-    border-top-color: var(--primary);
-    border-radius: 50%;
-    animation: spin .7s linear infinite;
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--gray-300); flex-shrink: 0; }
+  .dot.ok  { background: var(--success); }
+  .dot.err { background: var(--error); }
+  #data-banner input {
+    flex: 1; min-width: 0; border: 1px solid var(--gray-300);
+    padding: 6px 10px; font-size: 12px; font-family: var(--font-mono);
+    color: var(--black); background: var(--white);
   }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  #loading-overlay p {
-    color: var(--text-secondary);
-    font-size: 14px;
-    font-weight: 500;
+  #data-banner input:focus { outline: none; border-color: var(--red); }
+  #data-banner button {
+    padding: 6px 14px; background: var(--black); color: var(--white);
+    border: none; cursor: pointer; font-size: 12px;
+    font-family: var(--font-display); font-weight: 700;
+    letter-spacing: .06em; transition: background .15s;
+  }
+  #data-banner button:hover { background: var(--red); }
+  #data-banner .btn-ghost {
+    background: transparent; border: 1px solid var(--gray-300);
+    color: var(--gray-700);
+  }
+  #data-banner .btn-ghost:hover { border-color: var(--red); color: var(--red); background: transparent; }
+
+  /* ── Section title ── */
+  .section-title {
+    font-size: 28px; font-weight: 800; color: var(--black);
+    padding: 28px 32px 6px; letter-spacing: -.01em;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .section-title::before {
+    content: ''; width: 6px; height: 28px;
+    background: var(--red); flex-shrink: 0;
+  }
+  .section-label {
+    font-size: 10px; font-weight: 700; letter-spacing: .12em;
+    text-transform: uppercase; color: var(--gray-500);
+    padding: 20px 32px 0;
   }
 
-  /* ── Data Source Banner ── */
-  #data-banner {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-left: 4px solid var(--primary-mid);
-    border-radius: var(--radius);
-    padding: 10px 16px;
-    margin-bottom: 18px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 13px;
-    color: var(--text-secondary);
-    box-shadow: var(--shadow-sm);
+  /* ── Panel / Card ── */
+  .panel {
+    background: var(--white); border: 1px solid var(--gray-300);
+    border-top: 3px solid var(--black);
+    padding: 20px 24px; margin: 0 32px 16px;
   }
-  #data-banner .dot {
-    width: 8px; height: 8px;
-    border-radius: 50%;
-    background: var(--text-muted);
-    flex-shrink: 0;
-  }
-  #data-banner .dot.ok  { background: var(--success); }
-  #data-banner .dot.err { background: var(--error); }
-  #data-banner input {
-    flex: 1; min-width: 0;
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    padding: 6px 10px;
-    font-size: 12px;
-    font-family: var(--font-mono);
-    color: var(--text-primary);
-    background: var(--bg);
-    transition: border-color .15s;
-  }
-  #data-banner input:focus {
-    outline: none;
-    border-color: var(--primary);
-  }
-  #data-banner button {
-    padding: 6px 14px;
-    background: var(--primary);
-    color: #FFFFFF;
-    border: none;
-    border-radius: var(--radius-sm);
-    cursor: pointer;
-    font-size: 13px;
-    font-family: var(--font-body);
-    font-weight: 500;
-    white-space: nowrap;
-    transition: background .15s;
-  }
-  #data-banner button:hover { background: var(--primary-dark); }
-  #data-banner .btn-ghost {
-    background: transparent;
-    border: 1px solid var(--border);
-    color: var(--text-secondary);
-  }
-  #data-banner .btn-ghost:hover {
-    background: var(--bg);
-    border-color: var(--accent);
-    color: var(--accent);
+  .panel h3 {
+    font-size: 11px; font-weight: 700; letter-spacing: .1em;
+    text-transform: uppercase; color: var(--gray-500);
+    margin-bottom: 14px; padding-bottom: 8px;
+    border-bottom: 1px solid var(--gray-100);
   }
 
   /* ── KPI Cards ── */
-  .kpi-row {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-    gap: 12px;
-    margin-bottom: 18px;
-  }
+  .kpi-grid { display: grid; grid-template-columns: repeat(5,1fr); gap: 12px; padding: 0 32px 16px; }
   .kpi-card {
-    background: var(--card);
-    border: 1px solid var(--border-light);
-    border-left: 4px solid var(--accent);   /* 磚紅左邊線 */
-    border-radius: var(--radius);
-    padding: 16px 18px;
-    box-shadow: var(--shadow-sm);
-    transition: box-shadow .2s, transform .2s;
+    background: var(--gray-100); padding: 18px 16px;
+    border-top: 3px solid var(--black);
+    transition: border-color .15s;
   }
-  .kpi-card:hover {
-    box-shadow: var(--shadow-md);
-    transform: translateY(-1px);
-  }
-  .kpi-card .val {
-    font-size: 28px;
-    font-weight: 700;
-    color: var(--primary);
-    font-family: var(--font-mono);
-    letter-spacing: -.02em;
-    line-height: 1.1;
-  }
-  .kpi-card .lbl {
-    font-size: 13px;
-    color: var(--text-secondary);
-    margin-top: 4px;
-    font-weight: 500;
-    letter-spacing: .01em;
-  }
+  .kpi-card:hover { border-top-color: var(--red); }
+  .kpi-val { font-size: 32px; font-weight: 800; color: var(--black); line-height: 1; margin-bottom: 4px; }
+  .kpi-label { font-size: 11px; color: var(--gray-500); font-weight: 600; letter-spacing: .06em; text-transform: uppercase; }
 
-  /* ── Section Title ── */
-  .section-title {
-    font-size: 22px;
-    font-weight: 700;
-    color: var(--primary);
-    margin-bottom: 16px;
-    padding-bottom: 10px;
-    border-bottom: 2px solid var(--border-light);
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-  .section-title::before {
-    content: '';
-    display: block;
-    width: 4px;
-    height: 22px;
-    background: var(--accent);
-    border-radius: 2px;
-    flex-shrink: 0;
-  }
-
-  /* ── Panel ── */
-  .panel {
-    background: var(--card);
-    border: 1px solid var(--border-light);
-    border-radius: var(--radius-lg);
-    padding: 20px;
-    box-shadow: var(--shadow);
-    margin-bottom: 16px;
-  }
-  .panel h3 {
-    font-size: 16px;            /* H3: 16px（panel 內縮一級） */
-    font-weight: 600;
-    color: var(--primary);
-    margin-bottom: 14px;
-    padding-bottom: 8px;
-    border-bottom: 1px solid var(--border-light);
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-  .panel h3::after {
-    content: '';
-    display: block;
-    flex: 1;
-    height: 1px;
-    background: linear-gradient(to right, var(--border-light), transparent);
-  }
-
-  /* ── Grid helpers ── */
-  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
-  @media (max-width: 680px) {
-    .grid-2, .grid-3 { grid-template-columns: 1fr; }
-  }
-
-  /* ── Form Controls ── */
-  .ctrl-row {
-    display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 16px;
-  }
-  .ctrl-group {
-    display: flex; flex-direction: column; gap: 5px;
-    min-width: 140px; flex: 1;
-  }
+  /* ── Controls ── */
+  .ctrl-row { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 14px; }
+  .ctrl-group { display: flex; flex-direction: column; gap: 4px; min-width: 120px; flex: 1; }
   .ctrl-group label {
-    font-size: 12px;
-    color: var(--text-secondary);
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: .06em;
+    font-size: 10px; font-weight: 700; letter-spacing: .1em;
+    text-transform: uppercase; color: var(--gray-500);
   }
-  .ctrl-group select,
-  .ctrl-group input[type="text"] {
-    padding: 8px 12px;
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    font-size: 14px;
-    font-family: var(--font-body);
-    background: var(--card);
-    color: var(--text-primary);
-    transition: border-color .15s, box-shadow .15s;
+  .ctrl-group select, .ctrl-group input[type="text"] {
+    padding: 7px 10px; border: 1px solid var(--gray-300);
+    font-size: 13px; font-family: var(--font-display);
+    background: var(--white); color: var(--black);
+    transition: border-color .15s;
   }
-  .ctrl-group select:hover,
-  .ctrl-group input:hover { border-color: var(--primary-mid); }
-  .ctrl-group select:focus,
-  .ctrl-group input:focus {
-    outline: none;
-    border-color: var(--primary);
-    box-shadow: 0 0 0 3px rgba(15,43,99,.10);
+  .ctrl-group select:focus, .ctrl-group input:focus {
+    outline: none; border-color: var(--red);
   }
 
   /* ── Buttons ── */
   .btn {
-    padding: 8px 16px;
-    border: none;
-    border-radius: var(--radius-sm);
-    font-family: var(--font-body);
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: background .15s, transform .1s, box-shadow .15s;
+    padding: 7px 16px; border: none; font-family: var(--font-display);
+    font-size: 12px; font-weight: 700; letter-spacing: .06em;
+    text-transform: uppercase; cursor: pointer; transition: background .15s;
   }
-  .btn:active { transform: scale(.98); }
-  .btn-primary {
-    background: var(--primary);
-    color: #FFFFFF;
-    box-shadow: 0 2px 6px rgba(15,43,99,.25);
-  }
-  .btn-primary:hover { background: var(--primary-dark); }
+  .btn-primary { background: var(--black); color: var(--white); }
+  .btn-primary:hover { background: var(--red); }
   .btn-ghost {
-    background: transparent;
-    border: 1px solid var(--border);
-    color: var(--text-secondary);
+    background: transparent; border: 1px solid var(--gray-300); color: var(--gray-700);
   }
-  .btn-ghost:hover {
-    border-color: var(--accent);
-    color: var(--accent);
-    background: var(--accent-pale);
-  }
+  .btn-ghost:hover { border-color: var(--red); color: var(--red); }
 
-  /* ── Bar Chart ── */
-  .bar-row {
-    display: flex; align-items: center; gap: 10px; margin-bottom: 8px;
+  /* ── Search results ── */
+  .result-count {
+    font-size: 11px; font-weight: 700; letter-spacing: .08em;
+    text-transform: uppercase; color: var(--gray-500);
+    padding: 0 32px 8px;
   }
-  .bar-row .name {
-    width: 136px; font-size: 13px;
-    color: var(--text-primary);
-    flex-shrink: 0;
-    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  .brand-list { display: flex; flex-direction: column; gap: 0; margin: 0 32px; border: 1px solid var(--gray-300); }
+  .brand-row {
+    display: grid; grid-template-columns: 1fr 1fr 1fr 80px;
+    padding: 10px 14px; border-bottom: 1px solid var(--gray-100);
+    font-size: 13px; align-items: center;
+    transition: background .12s;
   }
-  .bar-track {
-    flex: 1; height: 10px;
-    background: var(--border-light);
-    border-radius: 5px;
-    overflow: hidden;
-  }
-  .bar-fill {
-    height: 100%;
-    border-radius: 5px;
-    background: linear-gradient(to right, var(--primary), var(--primary-mid));
-    transition: width .5s cubic-bezier(.4,0,.2,1);
-  }
-  .bar-val {
-    width: 38px; text-align: right;
-    font-size: 13px;
-    font-family: var(--font-mono);
-    color: var(--accent);
-    font-weight: 500;
+  .brand-row:hover { background: var(--gray-100); }
+  .brand-row:last-child { border-bottom: none; }
+  .brand-name { font-weight: 700; color: var(--black); }
+  .brand-meta { color: var(--gray-500); font-size: 12px; }
+  .floor-tag {
+    display: inline-block; background: var(--black); color: var(--white);
+    font-size: 10px; font-weight: 700; padding: 2px 7px; letter-spacing: .06em;
   }
 
   /* ── Heatmap ── */
-  .hm-wrap { overflow-x: auto; }
-  .hm-table { border-collapse: collapse; font-size: 12px; width: 100%; }
-  .hm-table th {
-    background: var(--primary);
-    color: rgba(255,255,255,.90);
-    padding: 7px 8px;
-    text-align: center;
-    white-space: nowrap;
-    font-weight: 600;
-    font-size: 12px;
-    letter-spacing: .02em;
+  .hm-grid { display: grid; gap: 2px; padding: 0 32px 16px; }
+  .hm-cell {
+    padding: 6px 10px; font-size: 11px; font-weight: 700;
+    cursor: pointer; transition: opacity .15s; letter-spacing: .04em;
   }
-  .hm-table th:first-child {
-    background: var(--primary-dark);
-    text-align: left;
-  }
-  .hm-table td {
-    padding: 5px 6px;
-    text-align: center;
-    border: 1px solid var(--border-light);
-    font-size: 12px;
-    transition: background .1s;
-  }
-  .hm-table td:first-child {
-    font-weight: 600;
-    font-size: 12px;
-    background: #F0EBE3;
-    color: var(--primary);
-    text-align: left;
-    white-space: nowrap;
-    padding-left: 10px;
-  }
-  /* 磚紅色系漸層熱力 */
-  .hi0 { background: #FAF7F4; color: var(--text-muted); }
-  .hi1 { background: #F5EDE9; color: var(--accent); }
-  .hi2 { background: #E8C5B8; color: #7A3020; }
-  .hi3 { background: #C9866E; color: #FFFFFF; }
-  .hi4 { background: #A2543B; color: #FFFFFF; font-weight: 600; }
-  .hi5 { background: var(--primary); color: #FFFFFF; font-weight: 700; }
+  .hm-row-label { font-size: 11px; color: var(--gray-500); font-weight: 600; padding: 6px 0; display: flex; align-items: center; }
+  .hm-col-label { font-size: 10px; color: var(--gray-500); font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
 
-  /* ── Search Results ── */
-  .result-brand {
-    border: 1px solid var(--border-light);
-    border-radius: var(--radius);
-    margin-bottom: 12px;
-    overflow: hidden;
-    box-shadow: var(--shadow-sm);
-  }
-  .result-brand-header {
-    background: var(--primary);
-    color: #FFFFFF;
-    padding: 10px 16px;
-    font-size: 15px;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-  .result-brand-header::before {
-    content: '';
-    display: block;
-    width: 3px; height: 16px;
-    background: var(--accent);
-    border-radius: 2px;
-    flex-shrink: 0;
-  }
-  .result-location {
-    display: flex; justify-content: space-between; align-items: center;
-    padding: 10px 16px;
-    border-bottom: 1px solid var(--border-light);
-    font-size: 14px;
-    transition: background .12s;
-  }
-  .result-location:hover { background: #FAF7F4; }
-  .result-location:last-child { border-bottom: none; }
-  .floor-badge {
-    background: var(--accent);
-    color: #FFFFFF;
-    font-family: var(--font-mono);
-    padding: 3px 10px;
-    border-radius: var(--radius-sm);
-    font-size: 12px;
-    font-weight: 500;
-    letter-spacing: .04em;
-  }
+  /* ── Scroll box ── */
+  .scroll-box { max-height: 320px; overflow-y: auto; scrollbar-width: thin; }
+  .scroll-box::-webkit-scrollbar { width: 3px; }
+  .scroll-box::-webkit-scrollbar-thumb { background: var(--gray-300); }
 
-  /* ── Venn ── */
-  .venn-wrap { display: flex; justify-content: center; align-items: center; padding: 8px 0; }
-  .venn-wrap svg text { font-family: var(--font-mono); }
-
-  /* ── Tags ── */
-  .tag-list { display: flex; flex-wrap: wrap; gap: 6px; }
-  .tag {
-    padding: 4px 10px;
-    border-radius: 20px;
-    font-size: 12px;
-    font-weight: 500;
-    letter-spacing: .01em;
+  /* ── Matrix ── */
+  .matrix-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .matrix-table th {
+    background: var(--black); color: var(--white);
+    padding: 8px 12px; text-align: left;
+    font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
   }
-  .tag-a      { background: #E8EEF8; color: var(--primary); border: 1px solid #C5D2EA; }
-  .tag-b      { background: #E8F5EE; color: #1A5C35; border: 1px solid #B8DECA; }
-  .tag-shared { background: var(--accent-pale); color: var(--accent); border: 1px solid #DDB8A8; }
+  .matrix-table td { padding: 8px 12px; border-bottom: 1px solid var(--gray-100); }
+  .matrix-table tr:hover td { background: var(--gray-100); }
 
-  /* ── Map ── */
-  #leafletMap { height: 420px; border-radius: var(--radius); overflow: hidden; border: 1px solid var(--border); }
-  .map-legend {
-    display: flex; flex-wrap: wrap; gap: 14px;
-    font-size: 12px;
-    color: var(--text-secondary);
-    margin-top: 12px;
-    padding: 10px 14px;
-    background: var(--card);
-    border-radius: var(--radius-sm);
-    border: 1px solid var(--border-light);
+  /* ── Tab pills (rpt-tab style) ── */
+  .rpt-tab-btn {
+    padding: 6px 18px; border: 1px solid var(--gray-300);
+    background: transparent; color: var(--gray-700);
+    font-family: var(--font-display); font-size: 11px;
+    font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+    cursor: pointer; transition: all .15s;
   }
-  .legend-item { display: flex; align-items: center; gap: 6px; font-weight: 500; }
-  .legend-dot { width: 10px; height: 10px; border-radius: 50%; border: 1.5px solid rgba(0,0,0,.12); }
+  .rpt-tab-btn:hover { border-color: var(--red); color: var(--red); }
+  .rpt-tab-active { background: var(--black); border-color: var(--black); color: var(--white) !important; }
 
-  /* ── Rank rows ── */
-  .rank-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
-  .rank-num {
-    width: 28px;
-    font-size: 13px; font-weight: 700;
-    color: var(--accent);
-    font-family: var(--font-mono);
-    text-align: center;
-  }
+  /* ── Report cards ── */
+  .report-card { background: var(--white); border: 1px solid var(--gray-300); border-left: 4px solid var(--red); margin-bottom: 10px; }
+  .report-card-header { display: flex; align-items: flex-start; gap: 12px; padding: 16px 18px; cursor: pointer; transition: background .12s; }
+  .report-card-header:hover { background: var(--gray-100); }
+  .report-period-badge { background: var(--black); color: var(--white); padding: 3px 10px; font-size: 11px; font-weight: 700; letter-spacing: .06em; font-family: var(--font-mono); white-space: nowrap; flex-shrink: 0; }
+  .report-card-meta { flex: 1; min-width: 0; }
+  .report-card-title { font-size: 16px; font-weight: 700; color: var(--black); margin-bottom: 4px; }
+  .report-card-summary { font-size: 13px; color: var(--gray-500); line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .report-card-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+  .report-tag { background: var(--gray-100); color: var(--gray-700); border: 1px solid var(--gray-300); padding: 1px 7px; font-size: 10px; font-weight: 700; letter-spacing: .04em; }
+  .risk-badge { padding: 2px 8px; font-size: 10px; font-weight: 700; white-space: nowrap; flex-shrink: 0; letter-spacing: .04em; }
+  .risk-high { background: #FFF0EE; color: var(--red); border: 1px solid #FFBDB8; }
+  .risk-mid  { background: #FFFBF0; color: #B87A00; border: 1px solid #FFE499; }
+  .risk-low  { background: #F0FFF6; color: #1a8a4a; border: 1px solid #99DDBB; }
+  .report-toggle { font-size: 16px; color: var(--gray-500); flex-shrink: 0; }
+  .report-card-body { display: none; padding: 0 18px 18px; border-top: 1px solid var(--gray-100); }
+  .report-card-body.open { display: block; }
+  .report-body-content { padding-top: 14px; font-size: 14px; line-height: 1.8; color: var(--black); white-space: pre-wrap; }
+  .report-body-content h4 { font-size: 13px; font-weight: 700; color: var(--black); margin: 12px 0 5px; border-left: 3px solid var(--red); padding-left: 8px; text-transform: uppercase; letter-spacing: .06em; }
 
   /* ── Empty state ── */
-  .empty-state {
-    text-align: center;
-    padding: 40px 20px;
-    color: var(--text-muted);
-    font-size: 14px;
-  }
-  .empty-state::before {
-    content: '—';
-    display: block;
-    font-size: 28px;
-    margin-bottom: 8px;
-    color: var(--border);
-  }
+  .empty-state { text-align: center; padding: 48px 20px; color: var(--gray-500); font-size: 13px; letter-spacing: .04em; }
 
-  /* ── Scroll boxes ── */
-  .scroll-box { max-height: 260px; overflow-y: auto; }
-  .scroll-box::-webkit-scrollbar { width: 4px; }
-  .scroll-box::-webkit-scrollbar-track { background: var(--border-light); border-radius: 2px; }
-  .scroll-box::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+  /* ── Bar chart ── */
+  .bar-item { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-size: 12px; }
+  .bar-track { flex: 1; background: var(--gray-100); height: 20px; position: relative; }
+  .bar-fill { height: 100%; background: var(--black); transition: width .4s; }
+  .bar-fill.accent { background: var(--red); }
+  .bar-val { font-size: 12px; font-weight: 700; color: var(--black); min-width: 32px; text-align: right; }
+  .bar-label { min-width: 80px; color: var(--gray-700); font-size: 11px; text-overflow: ellipsis; overflow: hidden; white-space: nowrap; }
 
-  /* ── News Cards ── */
-  .news-card {
-    background: var(--card);
-    border: 1px solid var(--border-light);
-    border-radius: var(--radius-lg);
-    overflow: hidden;
-    box-shadow: var(--shadow-sm);
-    transition: box-shadow .2s, transform .2s;
-    display: flex;
-    flex-direction: column;
-    cursor: pointer;
-  }
-  .news-card:hover {
-    box-shadow: var(--shadow-md);
-    transform: translateY(-2px);
-  }
-  .news-card-img {
-    width: 100%;
-    height: 160px;
-    object-fit: cover;
-    background: linear-gradient(135deg, #E8EEF8 0%, #EDE8E0 100%);
-    display: flex; align-items: center; justify-content: center;
-    color: var(--text-muted);
-    font-size: 28px;
-    flex-shrink: 0;
-  }
-  .news-card-img img {
-    width: 100%; height: 100%; object-fit: cover;
-  }
-  .news-card-body {
-    padding: 14px 16px;
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-  }
-  .news-card-source {
-    font-size: 11px;
-    font-weight: 700;
-    color: var(--accent);
-    text-transform: uppercase;
-    letter-spacing: .06em;
-  }
-  .news-card-title {
-    font-size: 15px;
-    font-weight: 600;
-    color: var(--text-primary);
-    line-height: 1.45;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
-  .news-card-desc {
-    font-size: 13px;
-    color: var(--text-secondary);
-    line-height: 1.55;
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    flex: 1;
-  }
-  .news-card-footer {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-top: 8px;
-    padding-top: 8px;
-    border-top: 1px solid var(--border-light);
-    font-size: 11px;
-    color: var(--text-muted);
-  }
-  .news-card-footer a {
-    color: var(--primary);
-    text-decoration: none;
-    font-weight: 600;
-    font-size: 12px;
-  }
-  .news-card-footer a:hover { color: var(--accent); }
+  /* ── Map ── */
+  #leafletMap { height: 420px; overflow: hidden; border: 1px solid var(--gray-300); }
+  .legend { display: flex; gap: 12px; flex-wrap: wrap; font-size: 11px; color: var(--gray-700); padding: 8px 0; }
+  .legend-item { display: flex; align-items: center; gap: 4px; }
+  .legend-dot { width: 10px; height: 10px; border-radius: 50%; border: 1.5px solid rgba(0,0,0,.12); }
 
-  /* ── Report Tab Buttons ── */
-  .rpt-tab-btn {
-    padding: 7px 20px;
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    background: transparent;
-    color: var(--text-secondary);
-    font-family: var(--font-body);
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all .15s;
-  }
-  .rpt-tab-btn:hover {
-    border-color: var(--primary);
-    color: var(--primary);
-  }
-  .rpt-tab-active {
-    background: var(--primary);
-    border-color: var(--primary);
-    color: #FFFFFF !important;
-  }
+  /* ── Comparison ── */
+  .cp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .cp-panel { border: 1px solid var(--gray-300); border-top: 3px solid var(--black); padding: 16px; }
+  .cp-panel h4 { font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--gray-500); margin-bottom: 12px; }
+  .cp-panel.accent { border-top-color: var(--red); }
 
-  /* ── Report Cards ── */
-  .report-card {
-    background: var(--card);
-    border: 1px solid var(--border-light);
-    border-radius: var(--radius-lg);
-    margin-bottom: 16px;
-    overflow: hidden;
-    box-shadow: var(--shadow-sm);
-  }
-  .report-card-header {
-    display: flex;
-    align-items: flex-start;
-    gap: 14px;
-    padding: 18px 20px;
-    cursor: pointer;
-    user-select: none;
-    transition: background .12s;
-  }
-  .report-card-header:hover { background: #FAF7F4; }
-  .report-period-badge {
-    background: var(--primary);
-    color: #FFFFFF;
-    padding: 4px 12px;
-    border-radius: 20px;
-    font-size: 12px;
-    font-weight: 700;
-    white-space: nowrap;
-    flex-shrink: 0;
-    font-family: var(--font-mono);
-  }
-  .report-card-meta {
-    flex: 1;
-    min-width: 0;
-  }
-  .report-card-title {
-    font-size: 17px;
-    font-weight: 700;
-    color: var(--primary);
-    margin-bottom: 5px;
-    line-height: 1.4;
-  }
-  .report-card-summary {
-    font-size: 14px;
-    color: var(--text-secondary);
-    line-height: 1.55;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
-  .report-card-tags {
-    display: flex; flex-wrap: wrap; gap: 5px; margin-top: 6px;
-  }
-  .report-tag {
-    background: var(--accent-pale);
-    color: var(--accent);
-    border: 1px solid #DDB8A8;
-    padding: 2px 8px;
-    border-radius: 0;
-    font-size: 11px;
-    font-weight: 500;
-  }
-  .risk-badge {
-    padding: 3px 10px;
-    border-radius: 0;
-    font-size: 11px;
-    font-weight: 700;
-    white-space: nowrap;
-    flex-shrink: 0;
-  }
-  .risk-high   { background: #FDECEA; color: #B03A2E; border: 1px solid #F5B7B1; }
-  .risk-mid    { background: #FEF9E7; color: #9A6700; border: 1px solid #FAD77B; }
-  .risk-low    { background: #EAFAF1; color: #1E8449; border: 1px solid #A9DFBF; }
-  .report-toggle { font-size: 18px; color: var(--text-muted); flex-shrink:0; margin-top:2px; }
+  /* ── Competition ── */
+  .comp-rank { display: flex; align-items: baseline; gap: 6px; margin-bottom: 10px; }
+  .comp-num { font-size: 28px; font-weight: 800; color: var(--black); line-height: 1; }
+  .comp-name { font-size: 14px; font-weight: 700; color: var(--black); }
 
-  /* Report expanded body */
-  .report-card-body {
-    display: none;
-    padding: 0 20px 20px;
-    border-top: 1px solid var(--border-light);
+  /* ── Misc ── */
+  .tag {
+    display: inline-block; background: var(--gray-100); color: var(--gray-700);
+    border: 1px solid var(--gray-300); padding: 1px 7px;
+    font-size: 10px; font-weight: 700; letter-spacing: .04em;
   }
-  .report-card-body.open { display: block; }
-  .report-body-content {
-    padding-top: 16px;
-    font-size: 15px;
-    line-height: 1.8;
-    color: var(--text-primary);
-    white-space: pre-wrap;
-  }
-  .report-body-content h4 {
-    font-size: 15px;
-    font-weight: 700;
-    color: var(--primary);
-    margin: 14px 0 6px;
-    border-left: 3px solid var(--accent);
-    padding-left: 8px;
-  }
-  .report-divider {
-    height: 1px; background: var(--border-light); margin: 14px 0;
-  }
+  .tag.red { background: var(--red-pale); color: var(--red); border-color: #FFBDB8; }
+  /* ── Heatmap colors (red scale) ── */
+  .hm-table { border-collapse:collapse; width:100%; font-size:12px; }
+  .hm-table th { background:var(--black); color:var(--white); padding:6px 10px; font-size:10px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; white-space:nowrap; }
+  .hm-table td { padding:5px 8px; text-align:center; font-size:11px; font-weight:600; border:1px solid #E8E8E8; min-width:36px; }
+  .hi0 { background:#F5F5F5; color:#BBBBBB; }
+  .hi1 { background:#FFE8E6; color:#CC2200; }
+  .hi2 { background:#FFB8B3; color:#AA1500; }
+  .hi3 { background:#FF7A72; color:#880000; }
+  .hi4 { background:#FF3D2E; color:#ffffff; }
+  .hi5 { background:#CC0000; color:#ffffff; }
+  .venn-wrap { display:flex; justify-content:center; padding:8px 0; }
+  .bar-track { flex:1; background:var(--gray-100); height:18px; position:relative; }
+  .bar-fill { height:100%; background:var(--black); transition:width .4s; }
+  .rank-row { display:flex; align-items:center; gap:10px; margin-bottom:10px; }
+  .rank-num { font-size:16px; font-weight:800; color:var(--red); min-width:28px; font-family:var(--font-mono); }
+
 </style>
 </head>
 <body>
@@ -780,10 +326,11 @@
 
 <div id="loading-overlay">
   <div class="spinner"></div>
-  <p id="loading-text">載入資料中…</p>
+  <p id="loading-text">載入中…</p>
 </div>
 
 <div id="app-header">
+  <div class="header-logo">Retail Intel.</div>
   <div id="tab-bar">
     <button class="tab-btn active" data-tab="map">台灣百貨據點地圖</button>
     <button class="tab-btn" data-tab="compare">品牌覆蓋度比較</button>
@@ -792,7 +339,6 @@
 </div>
 
 <div id="content-area">
-
   <!-- Data Source Banner -->
   <div id="data-banner">
     <div class="dot" id="ds-dot"></div>
@@ -802,7 +348,6 @@
     <button onclick="loadFromSheets()">載入</button>
     <button class="btn-ghost btn" onclick="loadSampleData()" style="margin-left:0">範例資料</button>
   </div>
-
   <div class="section active" id="sec-map">
     <div class="section-title">台灣百貨據點地圖</div>
     <div class="panel">
@@ -813,13 +358,13 @@
       </div>
       <div id="leafletMap"></div>
       <div class="map-legend">
-        <div class="legend-item"><div class="legend-dot" style="background:#C9C4BC"></div>0–50 品牌</div>
-        <div class="legend-item"><div class="legend-dot" style="background:#E8C5B8"></div>51–100</div>
-        <div class="legend-item"><div class="legend-dot" style="background:#C9866E"></div>101–200</div>
-        <div class="legend-item"><div class="legend-dot" style="background:#A2543B"></div>201–300</div>
-        <div class="legend-item"><div class="legend-dot" style="background:#0F2B63"></div>300+</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#F5F5F5;border:1.5px solid #CCC"></div>0–50 品牌</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#FFB8B3"></div>51–100</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#FF7A72"></div>101–200</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#FF3D2E"></div>201–300</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#CC0000"></div>300+</div>
       </div>
-      <div class="kpi-row" style="margin-top:10px">
+      <div class="kpi-row" style="display:grid;grid-template-columns:repeat(3,1fr);margin-top:10px">
         <div class="kpi-card"><div class="val" id="map-k1">0</div><div class="lbl">顯示據點</div></div>
         <div class="kpi-card"><div class="val" id="map-k2">0</div><div class="lbl">涵蓋品牌</div></div>
         <div class="kpi-card"><div class="val" id="map-k3">0</div><div class="lbl">平均品牌數</div></div>
@@ -827,50 +372,54 @@
     </div>
   </div>
   <div class="section" id="sec-compare">
+    <div class="section-label">Brand Coverage</div>
     <div class="section-title">品牌覆蓋度比較</div>
-    <div class="panel">
+    <div class="panel" style="margin:0 32px 16px">
       <div class="ctrl-row">
         <div class="ctrl-group"><label>分店 A</label><select id="cp-a"><option value="">請選擇分店…</option></select></div>
         <div class="ctrl-group"><label>分店 B</label><select id="cp-b"><option value="">請選擇分店…</option></select></div>
       </div>
-      <div id="cp-kpis" style="display:none" class="kpi-row">
+    </div>
+    <div id="cp-kpis" style="display:none">
+      <div class="kpi-row" style="display:grid;grid-template-columns:repeat(5,1fr)">
         <div class="kpi-card"><div class="val" id="cp-a-cnt" style="color:#2563EB">0</div><div class="lbl">A 品牌數</div></div>
         <div class="kpi-card"><div class="val" id="cp-b-cnt" style="color:#059669">0</div><div class="lbl">B 品牌數</div></div>
         <div class="kpi-card"><div class="val" id="cp-shared-cnt">0</div><div class="lbl">共同品牌</div></div>
         <div class="kpi-card"><div class="val" id="cp-oa-cnt" style="color:#D97706">0</div><div class="lbl">A 獨有</div></div>
         <div class="kpi-card"><div class="val" id="cp-ob-cnt" style="color:#7C3AED">0</div><div class="lbl">B 獨有</div></div>
       </div>
-      <div id="cp-results" style="display:none">
-        <div class="grid-2" style="margin-bottom:14px">
-          <div class="panel" style="margin-bottom:0">
-            <h3>韋恩圖</h3>
-            <div class="venn-wrap" id="venn-svg"></div>
-          </div>
-          <div class="panel" style="margin-bottom:0">
-            <h3>分類比較 (A藍 / B綠)</h3>
-            <div id="cp-cat" class="scroll-box"></div>
-          </div>
+    </div>
+    <div id="cp-results" style="display:none">
+      <div class="grid-2" style="padding-bottom:0">
+        <div class="panel" style="margin:0 0 16px 32px">
+          <h3>韋恩圖（圓圈大小反映品牌數）</h3>
+          <div class="venn-wrap" id="venn-svg"></div>
         </div>
-        <div class="grid-3">
-          <div class="panel" style="margin-bottom:0">
-            <h3 style="color:#2563EB">僅在 A</h3>
-            <div id="cp-list-a" class="scroll-box tag-list"></div>
-          </div>
-          <div class="panel" style="margin-bottom:0">
-            <h3>共同品牌</h3>
-            <div id="cp-list-shared" class="scroll-box tag-list"></div>
-          </div>
-          <div class="panel" style="margin-bottom:0">
-            <h3 style="color:#059669">僅在 B</h3>
-            <div id="cp-list-b" class="scroll-box tag-list"></div>
-          </div>
+        <div class="panel" style="margin:0 32px 16px 0">
+          <h3>分類比較（<span style="color:#2563EB">■ A</span> / <span style="color:#059669">■ B</span>）</h3>
+          <div id="cp-cat" class="scroll-box"></div>
+        </div>
+      </div>
+      <div class="grid-3">
+        <div class="panel" style="margin:0 0 16px 32px">
+          <h3 style="border-left:3px solid #2563EB;padding-left:8px;color:#2563EB">僅在 A</h3>
+          <div id="cp-list-a" class="scroll-box" style="margin-top:8px"></div>
+        </div>
+        <div class="panel" style="margin-bottom:16px">
+          <h3 style="border-left:3px solid var(--black);padding-left:8px">共同品牌</h3>
+          <div id="cp-list-shared" class="scroll-box" style="margin-top:8px"></div>
+        </div>
+        <div class="panel" style="margin:0 32px 16px 0">
+          <h3 style="border-left:3px solid #059669;padding-left:8px;color:#059669">僅在 B</h3>
+          <div id="cp-list-b" class="scroll-box" style="margin-top:8px"></div>
         </div>
       </div>
     </div>
   </div>
   <div class="section" id="sec-competition">
+    <div class="section-label">Competition Analysis</div>
     <div class="section-title">百貨競爭度分析</div>
-    <div class="panel">
+    <div class="panel" style="margin:0 32px 16px">
       <div class="ctrl-row">
         <div class="ctrl-group"><label>分析維度</label>
           <select id="comp-dim">
@@ -892,27 +441,37 @@
           </select>
         </div>
       </div>
-      <div id="comp-kpis" style="display:none" class="kpi-row">
+    </div>
+    <div id="comp-kpis" style="display:none">
+      <div class="kpi-row" style="display:grid;grid-template-columns:repeat(3,1fr)">
         <div class="kpi-card"><div class="val" id="comp-k1">0</div><div class="lbl">相關百貨數</div></div>
         <div class="kpi-card"><div class="val" id="comp-k2">0</div><div class="lbl">總品牌數</div></div>
-        <div class="kpi-card"><div class="val" id="comp-k3" style="font-size:14px">—</div><div class="lbl">覆蓋最高</div></div>
+        <div class="kpi-card"><div class="val" id="comp-k3" style="font-size:18px;font-weight:800">—</div><div class="lbl">覆蓋最高</div></div>
       </div>
-      <div id="comp-results" style="display:none">
-        <div class="grid-2">
-          <div class="panel" style="margin-bottom:0">
-            <h3>品牌覆蓋度排行</h3>
-            <div id="comp-rank" class="scroll-box"></div>
-          </div>
-          <div class="panel" style="margin-bottom:0">
-            <h3>分類競爭熱力圖</h3>
-            <div class="hm-wrap" id="comp-hm"></div>
+    </div>
+    <div id="comp-results" style="display:none">
+      <div class="grid-2">
+        <div class="panel" style="margin:0 0 16px 32px">
+          <h3>品牌覆蓋度排行</h3>
+          <div id="comp-rank" class="scroll-box" style="margin-top:8px"></div>
+        </div>
+        <div class="panel" style="margin:0 32px 16px 0">
+          <h3>分類競爭熱力圖</h3>
+          <div class="hm-wrap" id="comp-hm" style="margin-top:8px"></div>
+          <div class="map-legend" style="margin-top:8px">
+            <span style="font-weight:700;font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--gray-500)">密度：</span>
+            <div class="legend-item"><div style="width:12px;height:12px;background:#F5F5F5;border:1px solid #CCC"></div>0</div>
+            <div class="legend-item"><div style="width:12px;height:12px;background:#FFE8E6"></div>低</div>
+            <div class="legend-item"><div style="width:12px;height:12px;background:#FFB8B3"></div>中低</div>
+            <div class="legend-item"><div style="width:12px;height:12px;background:#FF7A72"></div>中高</div>
+            <div class="legend-item"><div style="width:12px;height:12px;background:#FF3D2E"></div>高</div>
+            <div class="legend-item"><div style="width:12px;height:12px;background:#CC0000"></div>極高</div>
           </div>
         </div>
       </div>
     </div>
   </div>
-
-</div><!-- /content-area -->
+</div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
@@ -1258,7 +817,7 @@ function renderActiveTab() {
 function renderMap() {
   if (typeof L === 'undefined') {
     document.getElementById('leafletMap').innerHTML =
-      '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text-muted);font-size:14px">地圖套件載入中，請稍候再切換至此頁…</div>';
+      '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--gray-500);font-size:14px">地圖套件載入中，請稍候再切換至此頁…</div>';
     return;
   }
   if (!leafletMap) {
@@ -1290,11 +849,11 @@ function renderMap() {
     rows.forEach(r => totalBrands.add(r.brand_name));
     totalMalls++; visible++;
 
-    let color = '#C9C4BC';          // 0-50 灰米
-    if (cnt > 300)      color = '#0F2B63';  // 深藍
-    else if (cnt > 200) color = '#A2543B';  // 磚紅
-    else if (cnt > 100) color = '#C9866E';  // 中磚紅
-    else if (cnt > 50)  color = '#E8C5B8';  // 淡磚紅
+    let color = '#F5F5F5';          // 0-50 灰白
+    if (cnt > 300)      color = '#CC0000';  // 深紅
+    else if (cnt > 200) color = '#FF3D2E';  // 標準紅
+    else if (cnt > 100) color = '#FF7A72';  // 中紅
+    else if (cnt > 50)  color = '#FFB8B3';  // 淡紅
 
     const icon = L.divIcon({
       html: `<div style="background:${color};width:16px;height:16px;border-radius:50%;border:2px solid white;box-shadow:0 1px 4px rgba(0,0,0,.3)"></div>`,
@@ -1344,18 +903,39 @@ function renderCompare() {
   document.getElementById('cp-kpis').style.display    = '';
   document.getElementById('cp-results').style.display = '';
 
-  // Venn
-  const total = bA.size + bB.size - shared.size;
-  document.getElementById('venn-svg').innerHTML = `
-    <svg width="300" height="170" viewBox="0 0 300 170">
-      <circle cx="110" cy="90" r="72" fill="rgba(15,43,99,.20)" stroke="#0F2B63" stroke-width="2"/>
-      <circle cx="190" cy="90" r="72" fill="rgba(162,84,59,.20)" stroke="#A2543B" stroke-width="2"/>
-      <text x="68"  y="95" text-anchor="middle" font-size="22" font-weight="700" fill="#0F2B63">${onlyA.size}</text>
-      <text x="150" y="95" text-anchor="middle" font-size="16" font-weight="700" fill="#5C3D2E">${shared.size}</text>
-      <text x="232" y="95" text-anchor="middle" font-size="22" font-weight="700" fill="#A2543B">${onlyB.size}</text>
-      <text x="68"  y="32" text-anchor="middle" font-size="10" fill="#0F2B63" font-weight="600">${esc(mallA.substring(0,10))}…</text>
-      <text x="232" y="32" text-anchor="middle" font-size="10" fill="#A2543B" font-weight="600">${esc(mallB.substring(0,10))}…</text>
-    </svg>`;
+  // Venn — dynamic circle sizes based on brand counts
+  {
+    const W = 340, H = 200, CY = 105;
+    const maxR = 88, minR = 30;
+    const maxCnt = Math.max(bA.size, bB.size, 1);
+    const rA = Math.round(minR + (bA.size / maxCnt) * (maxR - minR));
+    const rB = Math.round(minR + (bB.size / maxCnt) * (maxR - minR));
+    // Overlap based on shared ratio
+    const overlapRatio = bA.size > 0 ? shared.size / Math.min(bA.size, bB.size) : 0;
+    const minDist = Math.abs(rA - rB) + 4;
+    const maxDist = rA + rB - 8;
+    const dist = Math.round(maxDist - overlapRatio * (maxDist - minDist));
+    const cx = W / 2;
+    const cxA = Math.round(cx - dist / 2);
+    const cxB = Math.round(cx + dist / 2);
+    // Label positions
+    const labAx = Math.round(cxA - rA * 0.55);
+    const labBx = Math.round(cxB + rB * 0.55);
+    const midX  = Math.round((cxA + cxB) / 2);
+    document.getElementById('venn-svg').innerHTML = `
+      <svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" style="overflow:visible">
+        <circle cx="${cxA}" cy="${CY}" r="${rA}" fill="rgba(37,99,235,.15)" stroke="#2563EB" stroke-width="2"/>
+        <circle cx="${cxB}" cy="${CY}" r="${rB}" fill="rgba(5,150,105,.15)" stroke="#059669" stroke-width="2"/>
+        <text x="${labAx}" y="${CY + 6}" text-anchor="middle" font-size="24" font-weight="800" fill="#2563EB" font-family="DM Mono,monospace">${onlyA.size}</text>
+        <text x="${midX}"  y="${CY + 6}" text-anchor="middle" font-size="18" font-weight="800" fill="#333" font-family="DM Mono,monospace">${shared.size}</text>
+        <text x="${labBx}" y="${CY + 6}" text-anchor="middle" font-size="24" font-weight="800" fill="#059669" font-family="DM Mono,monospace">${onlyB.size}</text>
+        <text x="${cxA}" y="18" text-anchor="middle" font-size="10" fill="#2563EB" font-weight="700">${esc(mallA.length>12?mallA.substring(0,11)+'…':mallA)}</text>
+        <text x="${cxB}" y="18" text-anchor="middle" font-size="10" fill="#059669" font-weight="700">${esc(mallB.length>12?mallB.substring(0,11)+'…':mallB)}</text>
+        <text x="${labAx}" y="${CY + 22}" text-anchor="middle" font-size="9" fill="#666">獨有</text>
+        <text x="${midX}"  y="${CY + 22}" text-anchor="middle" font-size="9" fill="#666">共同</text>
+        <text x="${labBx}" y="${CY + 22}" text-anchor="middle" font-size="9" fill="#666">獨有</text>
+      </svg>`;
+  }
 
   // Category comparison
   const catRows = DATA.categories.map(cat => {
@@ -1367,7 +947,7 @@ function renderCompare() {
   document.getElementById('cp-cat').innerHTML = catRows.map(({cat,cntA,cntB}) => `
     <div style="margin-bottom:8px">
       <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:2px">
-        <span>${esc(cat)}</span><span style="color:var(--text-secondary)">A:${cntA} / B:${cntB}</span>
+        <span>${esc(cat)}</span><span style="color:var(--gray-700)">A:${cntA} / B:${cntB}</span>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:3px">
         <div class="bar-track"><div class="bar-fill" style="width:${cntA/maxCat*100}%;background:#2563EB"></div></div>
@@ -1431,7 +1011,7 @@ function renderComp() {
       <div style="flex:1">
         <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:2px">
           <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:160px">${esc(m)}</span>
-          <span style="font-family:var(--font-mono);color:var(--accent);font-weight:600">${cnt}</span>
+          <span style="font-family:var(--font-mono);color:var(--red);font-weight:600">${cnt}</span>
         </div>
         <div class="bar-track"><div class="bar-fill" style="width:${cnt/maxV*100}%"></div></div>
       </div>
@@ -1507,7 +1087,7 @@ function renderHeatTable(elId, rows, cols, matrix, tooltip=false, rowLabel=null)
       <thead><tr><th>↓行/列→</th>${cols.map(th).join('')}</tr></thead>
       <tbody>
         ${rows.map(r => `<tr>
-          <td style="font-weight:600;white-space:nowrap;background:#F0EBE3;color:var(--primary)">${esc(rowLabel ? rowLabel(r) : r)}</td>
+          <td style="font-weight:600;white-space:nowrap;background:#F0EBE3;color:var(--black)">${esc(rowLabel ? rowLabel(r) : r)}</td>
           ${cols.map(c => {
             const v = matrix[r]?.[c]||0;
             const i = maxV > 0 ? Math.min(Math.floor(v/maxV*5),5) : 0;
@@ -1638,8 +1218,8 @@ async function loadNewsFromRSS() {
       <div class="empty-state" style="grid-column:1/-1">
         <div style="font-size:28px;margin-bottom:10px">📡</div>
         <div style="font-weight:600;margin-bottom:6px">RSS 暫時無法載入</div>
-        <div style="font-size:11px;color:var(--text-muted);font-family:var(--font-mono);
-          background:var(--border-light);padding:8px 12px;border-radius:6px;
+        <div style="font-size:11px;color:var(--gray-500);font-family:var(--font-mono);
+          background:var(--gray-100);padding:8px 12px;border-radius:6px;
           max-width:400px;margin:8px auto 12px">${esc(lastError)}</div>
         <button class="btn btn-primary" onclick="loadNewsFromRSS()">🔄 重試</button>
       </div>`;
@@ -1651,7 +1231,7 @@ async function loadNewsFromRSS() {
   newsLoaded = true;
   const now = new Date().toLocaleString('zh-TW');
   statusEl.innerHTML = `
-    <span style="color:var(--text-secondary)">RSS (${usedProxy})</span>
+    <span style="color:var(--gray-700)">RSS (${usedProxy})</span>
     　共 ${items.length} 則　· 更新於 ${now}`;
 }
 
@@ -1704,10 +1284,10 @@ function renderNewsCards(items, isGCS = false) {
 
     const gcsBadges = isGCS ? `
       <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:6px">
-        ${item.category ? `<span style="background:var(--accent-pale);color:var(--accent);
+        ${item.category ? `<span style="background:var(--red-pale);color:var(--red);
           border:1px solid #DDB8A8;padding:2px 7px;border-radius:10px;font-size:10px;font-weight:600">
           ${esc(item.category)}</span>` : ''}
-        ${item.region ? `<span style="background:#E8EEF8;color:var(--primary);
+        ${item.region ? `<span style="background:#E8EEF8;color:var(--black);
           border:1px solid #C5D2EA;padding:2px 7px;border-radius:10px;font-size:10px;font-weight:600">
           ${esc(item.region)}</span>` : ''}
         <span style="${impactStyle[impact] || impactStyle.medium};
@@ -1732,7 +1312,7 @@ function renderNewsCards(items, isGCS = false) {
             <span>${pubDate}</span>
             ${link !== '#'
               ? `<a href="${link}" target="_blank" onclick="event.stopPropagation()">閱讀全文 →</a>`
-              : '<span style="color:var(--text-muted)">Gemini 摘要</span>'}
+              : '<span style="color:var(--gray-500)">Gemini 摘要</span>'}
           </div>
         </div>
       </div>`;
@@ -1986,7 +1566,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   loadSampleData();
 });
+
 </script>
-</div><!-- /app-root -->
+</div>
 </body>
 </html>
