@@ -440,20 +440,7 @@
 
 
 <script>
-// 分類對應色彩（取代圖片）
-const CAT_COLORS = {
-  '台灣零售':  { bg:'#111', text:'#fff' },
-  '百貨動態':  { bg:'#FF3D2E', text:'#fff' },
-  '電商':      { bg:'#1650FF', text:'#fff' },
-  '實體零售':  { bg:'#222', text:'#fff' },
-  '快時尚':    { bg:'#FF3D2E', text:'#fff' },
-  '品牌動態':  { bg:'#444', text:'#fff' },
-  '投資併購':  { bg:'#111', text:'#fff' },
-  '供應鏈':    { bg:'#555', text:'#fff' },
-  '消費趨勢':  { bg:'#FF3D2E', text:'#fff' },
-  '購物中心':  { bg:'#222', text:'#fff' },
-};
-const CARD_CATS = Object.keys(CAT_COLORS);
+const CARD_CATS = ['台灣零售','百貨動態','電商','實體零售','快時尚','品牌動態','投資併購','供應鏈','消費趨勢','購物中心','遠百','SOGO','新光三越','巨城','lalaport','outlet','量販','全聯','微風'];
 
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbyyxp8hFOYxp2rtdektwOW_FEqDSZMjoz_dXdPB04cLq2x9CqqNiqRRGxOQrJUmYjTb/exec';
 
@@ -501,15 +488,8 @@ async function loadNews() {
 }
 
 // ════════════════════════════════════
-// 渲染新聞卡片（色塊取代圖片）
+// 渲染新聞卡片
 // ════════════════════════════════════
-function catBlock(cat, isHero) {
-  const c = CAT_COLORS[cat] || { bg:'#111', text:'#fff' };
-  const h = isHero ? '100%' : '80px';
-  return '<div style="background:' + c.bg + ';min-height:' + h + ';display:flex;align-items:center;justify-content:center;flex-shrink:0">' +
-    '<span style="color:' + c.text + ';font-size:' + (isHero?'18px':'13px') + ';font-weight:800;letter-spacing:.06em;text-transform:uppercase;opacity:.9">' +
-    escT(cat) + '</span></div>';
-}
 
 function renderCards(items) {
   const grid = document.getElementById('news-grid');
@@ -527,7 +507,6 @@ function renderCards(items) {
   // 第一則：大圖橫幅
   var html = '<a href="' + escAttr(hero.link) + '" target="_blank" rel="noopener" style="text-decoration:none;color:inherit;display:block;margin-bottom:12px">' +
     '<div class="news-hero-card">' +
-    catBlock(hero.category, true) +
     '<div class="news-hero-body">' +
     '<span class="news-hero-rank">#1</span>' +
     '<div class="news-hero-cat">' + escT(hero.category) + '</div>' +
@@ -545,7 +524,6 @@ function renderCards(items) {
       html += '<a href="' + escAttr(item.link) + '" target="_blank" rel="noopener" style="text-decoration:none;color:inherit;display:flex;flex-direction:column">' +
         '<div class="news-card">' +
         '<div class="news-card-rank">#' + (i + 1) + '</div>' +
-        catBlock(item.category, false) +
         '<div class="news-card-body">' +
         '<div class="news-card-cat">' + escT(item.category) + '</div>' +
         '<div class="news-card-title">' + escT(item.title) + '</div>' +
