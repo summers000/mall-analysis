@@ -440,11 +440,21 @@
 
 
 <script>
-const CARD_CATS = ['台灣零售','百貨動態','電商','實體零售','快時尚','品牌動態','投資併購','供應鏈','消費趨勢','購物中心'];
+// 分類對應色彩（取代圖片）
+const CAT_COLORS = {
+  '台灣零售':  { bg:'#111', text:'#fff' },
+  '百貨動態':  { bg:'#FF3D2E', text:'#fff' },
+  '電商':      { bg:'#1650FF', text:'#fff' },
+  '實體零售':  { bg:'#222', text:'#fff' },
+  '快時尚':    { bg:'#FF3D2E', text:'#fff' },
+  '品牌動態':  { bg:'#444', text:'#fff' },
+  '投資併購':  { bg:'#111', text:'#fff' },
+  '供應鏈':    { bg:'#555', text:'#fff' },
+  '消費趨勢':  { bg:'#FF3D2E', text:'#fff' },
+  '購物中心':  { bg:'#222', text:'#fff' },
+};
+const CARD_CATS = Object.keys(CAT_COLORS);
 
-// ════════════════════════════════════
-// Google News via GAS Proxy
-// ════════════════════════════════════
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbyyxp8hFOYxp2rtdektwOW_FEqDSZMjoz_dXdPB04cLq2x9CqqNiqRRGxOQrJUmYjTb/exec';
 
 async function loadNews() {
@@ -455,7 +465,9 @@ async function loadNews() {
   gridEl.innerHTML = '<div class="empty-state" style="padding:60px 20px"><div style="font-size:28px;margin-bottom:12px">📡</div><div>載入中，請稍候…</div></div>';
 
   try {
-    const resp = await fetch(GAS_URL + '?q=' + encodeURIComponent('零售 百貨 電商 購物中心 快時尚') + '&n=10');
+    const resp = await fetch(
+      GAS_URL + '?q=' + encodeURIComponent('零售 百貨 電商 購物中心 快時尚') + '&n=50'
+    );
     if (!resp.ok) throw new Error('HTTP ' + resp.status);
 
     const data = await resp.json();
@@ -465,15 +477,14 @@ async function loadNews() {
     const normalized = data.news.map((a, i) => ({
       title:    a.title   || '',
       desc:     a.desc    || '',
-      link:     a.link    || '',   // Google News 轉址連結，點擊後會跳轉原始新聞
+      link:     a.link    || '',
       source:   a.source  || '',
       pubDate:  a.pubDate || '',
-      img:      '',
       category: CARD_CATS[i % CARD_CATS.length]
     }));
 
     renderCards(normalized);
-    statusEl.textContent = '共 ' + normalized.length + ' 則  ·  Google News  ·  ' + new Date().toLocaleString('zh-TW');
+    statusEl.textContent = '共 ' + normalized.length + ' 則（由新到舊）· Google News · ' + new Date().toLocaleString('zh-TW');
 
   } catch(err) {
     console.error(err);
@@ -490,8 +501,16 @@ async function loadNews() {
 }
 
 // ════════════════════════════════════
-// 渲染新聞卡片
+// 渲染新聞卡片（色塊取代圖片）
 // ════════════════════════════════════
+function catBlock(cat, isHero) {
+  const c = CAT_COLORS[cat] || { bg:'#111', text:'#fff' };
+  const h = isHero ? '100%' : '80px';
+  return '<div style="background:' + c.bg + ';min-height:' + h + ';display:flex;align-items:center;justify-content:center;flex-shrink:0">' +
+    '<span style="color:' + c.text + ';font-size:' + (isHero?'18px':'13px') + ';font-weight:800;letter-spacing:.06em;text-transform:uppercase;opacity:.9">' +
+    escT(cat) + '</span></div>';
+}
+
 function renderCards(items) {
   const grid = document.getElementById('news-grid');
   if (!items.length) { grid.innerHTML = '<div class="empty-state">找不到相關新聞</div>'; return; }
@@ -500,35 +519,33 @@ function renderCards(items) {
 
   function cardFooter(item) {
     return '<div class="news-card-footer">' +
-      '<span style="font-size:11px;color:var(--gray-500)">' + escT(item.source || '') +
-      (item.pubDate ? '&nbsp;·&nbsp;' + escT(item.pubDate) : '') + '</span>' +
-      '</div>';
+      '<span style="font-size:11px;color:var(--gray-500)">' +
+      escT(item.source || '') + (item.pubDate ? '&nbsp;·&nbsp;' + escT(item.pubDate) : '') +
+      '</span></div>';
   }
 
   // 第一則：大圖橫幅
-  const heroHref = 'href="' + escAttr(hero.link) + '" target="_blank" rel="noopener"';
-  var html = '<a ' + heroHref + ' style="text-decoration:none;color:inherit;display:block;margin-bottom:12px">' +
+  var html = '<a href="' + escAttr(hero.link) + '" target="_blank" rel="noopener" style="text-decoration:none;color:inherit;display:block;margin-bottom:12px">' +
     '<div class="news-hero-card">' +
-    '<div class="news-hero-body" style="border-left:4px solid var(--red);padding:24px 28px;display:flex;flex-direction:column;justify-content:space-between">' +
-    '<div>' +
+    catBlock(hero.category, true) +
+    '<div class="news-hero-body">' +
     '<span class="news-hero-rank">#1</span>' +
     '<div class="news-hero-cat">' + escT(hero.category) + '</div>' +
     '<div class="news-hero-title">' + escT(hero.title) + '</div>' +
     (hero.desc ? '<div class="news-hero-desc">' + escT(hero.desc) + '</div>' : '') +
-    '</div>' +
     cardFooter(hero) +
     '</div></div></a>';
 
   // 其餘：每排 3 則
-  var rest = items.slice(1, 10);
+  var rest = items.slice(1);
   for (var rs = 0; rs < rest.length; rs += 3) {
     html += '<div class="news-row3">';
     rest.slice(rs, rs + 3).forEach(function(item, ri) {
       var i = rs + ri + 1;
-      const href = 'href="' + escAttr(item.link) + '" target="_blank" rel="noopener"';
-      html += '<a ' + href + ' style="text-decoration:none;color:inherit;display:flex;flex-direction:column">' +
+      html += '<a href="' + escAttr(item.link) + '" target="_blank" rel="noopener" style="text-decoration:none;color:inherit;display:flex;flex-direction:column">' +
         '<div class="news-card">' +
         '<div class="news-card-rank">#' + (i + 1) + '</div>' +
+        catBlock(item.category, false) +
         '<div class="news-card-body">' +
         '<div class="news-card-cat">' + escT(item.category) + '</div>' +
         '<div class="news-card-title">' + escT(item.title) + '</div>' +
