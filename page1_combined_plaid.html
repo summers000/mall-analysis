@@ -346,9 +346,9 @@
   @media (max-width: 700px) { .news-row3 { grid-template-columns: 1fr; } .news-hero-card { grid-template-columns: 1fr; } }
 
   /* Small card */
-  .news-card { background: var(--white); border: 1px solid var(--gray-300); display: flex; flex-direction: column; position: relative; transition: border-color .2s; }
+  .news-card { background: var(--white); border: 1px solid var(--gray-300); display: flex; flex-direction: column; transition: border-color .2s; }
   .news-card:hover { border-color: var(--red); }
-  .news-card-rank { position: absolute; top: 8px; left: 8px; background: var(--black); color: var(--white); font-family: var(--font-mono); font-size: 10px; font-weight: 700; padding: 1px 6px; z-index: 1; }
+  .news-card-rank { display: inline-block; background: var(--black); color: var(--white); font-family: var(--font-mono); font-size: 10px; font-weight: 700; padding: 1px 6px; margin-bottom: 6px; }
   .news-card-img { width: 100%; height: 120px; overflow: hidden; flex-shrink: 0; }
   .news-card-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
   .news-card-body { padding: 12px 14px; flex: 1; display: flex; flex-direction: column; gap: 4px; }
@@ -440,7 +440,7 @@
 
 
 <script>
-const CARD_CATS = ['台灣零售','百貨動態','電商','實體零售','快時尚','品牌動態','投資併購','供應鏈','消費趨勢','購物中心','遠百','SOGO','新光三越','巨城','lalaport','outlet','量販','全聯','微風'];
+const CARD_CATS = ['台灣零售','百貨動態','電商','實體零售','快時尚','品牌動態','投資併購','供應鏈','消費趨勢','購物中心'];
 
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbyyxp8hFOYxp2rtdektwOW_FEqDSZMjoz_dXdPB04cLq2x9CqqNiqRRGxOQrJUmYjTb/exec';
 
@@ -523,8 +523,8 @@ function renderCards(items) {
       var i = rs + ri + 1;
       html += '<a href="' + escAttr(item.link) + '" target="_blank" rel="noopener" style="text-decoration:none;color:inherit;display:flex;flex-direction:column">' +
         '<div class="news-card">' +
-        '<div class="news-card-rank">#' + (i + 1) + '</div>' +
         '<div class="news-card-body">' +
+        '<div class="news-card-rank">#' + (i + 1) + '</div>' +
         '<div class="news-card-cat">' + escT(item.category) + '</div>' +
         '<div class="news-card-title">' + escT(item.title) + '</div>' +
         (item.desc ? '<div class="news-card-desc">' + escT(item.desc) + '</div>' : '') +
