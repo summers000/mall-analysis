@@ -453,7 +453,7 @@ async function loadNews() {
 
   try {
     const resp = await fetch(
-      GAS_URL + '?q=' + encodeURIComponent('零售 百貨 電商 購物中心 快時尚') + '&n=50'
+      GAS_URL + '?q=' + encodeURIComponent('百貨 OR 零售 OR 量販 OR 超市 OR 電商 OR 網購 OR 快時尚 OR 購物中心 OR outlet OR 商場 OR 超商') + '&n=50'
     );
     if (!resp.ok) throw new Error('HTTP ' + resp.status);
 
