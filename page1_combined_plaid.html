@@ -553,7 +553,7 @@ async function generateSummary(idx) {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             contents: [{ parts: [{ text: prompt }] }],
-            generationConfig: { maxOutputTokens: 800, temperature: 0.6 }
+            generationConfig: { maxOutputTokens: 1024, temperature: 0.6 }
           })
         }
       );
@@ -573,7 +573,7 @@ async function generateSummary(idx) {
     box.innerHTML =
       '<div style="border-left:3px solid var(--red);padding:8px 12px;background:#fff8f8">' +
       '<div style="font-size:10px;font-weight:700;letter-spacing:.08em;color:var(--red);margin-bottom:6px">✨ AI 摘要</div>' +
-      '<div style="font-size:13px;line-height:1.7;color:var(--black)">' + escT(text) + '</div>' +
+      '<div style="font-size:13px;line-height:1.8;color:var(--black)">' + escT(text).replace(/\n/g,'<br>') + '</div>' +
       '</div>';
     box.dataset.done = '1';
     btn.textContent = '✕ 收起';
