@@ -423,7 +423,7 @@
   <div style="background:var(--black);padding:14px 32px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
     <div>
       <div style="font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--red);margin-bottom:3px">Weekly Intelligence</div>
-      <div style="font-size:22px;font-weight:800;color:var(--white);letter-spacing:-.01em">本週全球零售新聞</div>
+      <div style="font-size:22px;font-weight:800;color:var(--white);letter-spacing:-.01em">每日全球零售新聞</div>
     </div>
     <div style="display:flex;gap:8px;align-items:center">
       <button onclick="loadNews()" style="padding:8px 18px;background:var(--red);color:#fff;border:none;font-size:12px;font-weight:700;letter-spacing:.06em;cursor:pointer;text-transform:uppercase">🔄 重新整理</button>
@@ -478,7 +478,7 @@ async function loadNews() {
     }));
 
     renderCards(normalized);
-    statusEl.textContent = '共 ' + normalized.length + ' 則（由新到舊）· Google News · ' + new Date().toLocaleString('zh-TW');
+    statusEl.textContent = '' + normalized.length + ' 則（由新到舊）· Google News · ' + new Date().toLocaleString('zh-TW');
   } catch(err) {
     console.error(err);
     document.getElementById('news-grid').innerHTML =
@@ -527,18 +527,20 @@ async function generateSummary(idx) {
   box.style.display = 'block';
   box.innerHTML = '<div style="color:var(--gray-500);font-size:12px;padding:8px 0">AI 分析中，請稍候…</div>';
 
-  const prompt = `你是一位專業的零售產業分析師，擁有豐富的台灣與全球零售市場知識。請根據以下新聞標題與摘要，結合你的產業知識，用繁體中文撰寫一篇 200 字的深度分析。
+  const prompt = `你是零售產業分析師。請用繁體中文，根據以下新聞，寫出剛好 200 字的分析摘要（請數字數，必須達到 200 字）。
 
-新聞標題：${title}
+標題：${title}
 摘要：${desc}
 來源：${source}
 
-撰寫規則：
-1. 第一段（約 80 字）：說明事件核心——發生什麼事、涉及哪些品牌或市場
-2. 第二段（約 120 字）：深入分析產業影響——為什麼重要、對台灣或全球零售市場的意義、可能帶來的趨勢或挑戰
-3. 若摘要資訊不足，請主動結合產業背景知識合理補充，確保內容具體有深度
-4. 不用「本文」「這則新聞」開頭，語氣客觀專業
-5. 總字數必須達到 200 字`;
+格式：
+【事件】（第一段，80字）說明核心事件、涉及品牌或市場。
+【分析】（第二段，120字）說明為何重要、對零售產業的影響與趨勢。
+
+規定：
+- 資訊不足時請依產業背景知識補充，確保內容具體
+- 不以「本文」「這則新聞」開頭
+- 合計恰好 200 字，不得少於 195 字`;
 
   try {
     // 最多重試 3 次，遇到 429 等待後重試
@@ -621,7 +623,7 @@ function renderCards(items) {
     '<span class="news-hero-rank">#1</span>' +
     '<div class="news-hero-cat">' + escT(hero.category) + '</div>' +
     '<div class="news-hero-title">' + escT(hero.title) + '</div>' +
-    (hero.desc ? '<div class="news-hero-desc">' + escT(hero.desc) + '</div>' : '') +
+
     cardFooter(hero) +
     cardButtons(hero, 0) +
     '</div></div>';
@@ -637,7 +639,7 @@ function renderCards(items) {
         '<div class="news-card-rank">#' + (i + 1) + '</div>' +
         '<div class="news-card-cat">' + escT(item.category) + '</div>' +
         '<div class="news-card-title">' + escT(item.title) + '</div>' +
-        (item.desc ? '<div class="news-card-desc">' + escT(item.desc) + '</div>' : '') +
+
         cardFooter(item) +
         cardButtons(item, i) +
         '</div></div>';
