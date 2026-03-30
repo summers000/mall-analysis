@@ -352,9 +352,8 @@
   .headline-row:last-child { border-bottom:none; }
   .headline-num { font-size:16px; font-weight:800; font-family:var(--font-mono); color:var(--red); min-width:24px; flex-shrink:0; line-height:1.4; }
   .headline-body { flex:1; min-width:0; }
-  .headline-title { font-size:14px; font-weight:700; color:var(--black); line-height:1.45; margin-bottom:4px; }
-  .headline-meta { font-size:11px; color:var(--gray-500); margin-bottom:6px; }
-  .headline-btns { display:flex; gap:6px; flex-wrap:wrap; }
+  .headline-title { font-size:14px; font-weight:700; color:var(--black); line-height:1.45; margin-bottom:6px; }
+  .headline-meta { font-size:11px; color:var(--gray-500); display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
     @media (max-width: 700px) { .news-row3 { grid-template-columns: 1fr; } .news-hero-card { grid-template-columns: 1fr; } }
 
   /* Small card */
@@ -470,8 +469,43 @@
   </div>
 </section>
 
-
-
+<!-- 頁內新聞分析區塊（預設隱藏，點 AI 摘要後展開） -->
+<div id="inline-analysis" style="display:none">
+  <!-- Hero：黑底 -->
+  <div style="background:var(--black);display:grid;grid-template-columns:1fr 1fr;min-height:220px;position:relative;overflow:hidden">
+    <div style="position:absolute;top:-40px;right:-40px;width:160px;height:160px;background:var(--red);border-radius:50%;opacity:.85"></div>
+    <div style="padding:32px 40px;display:flex;flex-direction:column;justify-content:space-between;position:relative;z-index:1">
+      <div>
+        <div style="font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--red);margin-bottom:8px">AI Analysis</div>
+        <div style="font-size:clamp(26px,4vw,40px);font-weight:800;color:var(--white);line-height:1.05;letter-spacing:-.02em;margin-bottom:12px">新聞分析</div>
+        <div id="ia-news-title" style="font-size:13px;color:rgba(255,255,255,.6);line-height:1.55;max-width:300px"></div>
+      </div>
+      <div id="ia-news-source" style="font-size:11px;color:rgba(255,255,255,.35);font-family:var(--font-mono);letter-spacing:.04em"></div>
+    </div>
+    <div style="padding:32px 40px 32px 28px;border-left:1px solid rgba(255,255,255,.1);position:relative;z-index:1;display:flex;flex-direction:column">
+      <div style="font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--red);border-left:3px solid var(--red);padding-left:10px;margin-bottom:14px">焦點分析</div>
+      <div id="ia-focus" style="font-size:14px;color:rgba(255,255,255,.85);line-height:1.8;flex:1">
+        <div style="display:flex;gap:10px;align-items:center"><div style="width:20px;height:20px;border:2px solid rgba(255,255,255,.2);border-top-color:var(--red);border-radius:50%;animation:spin .7s linear infinite"></div><span style="color:rgba(255,255,255,.5);font-size:12px">AI 分析中…</span></div>
+      </div>
+      <a id="ia-link" href="#" target="_blank" rel="noopener" style="display:none;margin-top:16px;padding:7px 16px;background:var(--red);color:#fff;font-size:11px;font-weight:700;letter-spacing:.08em;text-decoration:none;text-transform:uppercase;width:fit-content">🔗 閱讀原始新聞</a>
+    </div>
+  </div>
+  <!-- Strategy：紅底 -->
+  <div style="background:var(--red);display:grid;grid-template-columns:200px 1fr;min-height:100px">
+    <div style="padding:28px 32px;border-right:1px solid rgba(255,255,255,.2);display:flex;align-items:center">
+      <div style="font-size:clamp(18px,2.5vw,26px);font-weight:800;color:var(--white);line-height:1.1">Strategy<br>is the<br>key.</div>
+    </div>
+    <div style="padding:28px 36px;display:flex;align-items:center">
+      <div id="ia-strategy" style="font-size:14px;color:rgba(255,255,255,.9);line-height:1.75;font-style:italic">分析生成中…</div>
+    </div>
+  </div>
+  <!-- 指標 bar -->
+  <div style="background:var(--gray-100);border-top:1px solid var(--gray-300);display:grid;grid-template-columns:repeat(3,1fr)">
+    <div style="padding:12px 24px;border-right:1px solid var(--gray-300)"><div style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--gray-500);margin-bottom:3px">狀態</div><div id="ia-status" style="font-size:12px;font-weight:700;font-family:var(--font-mono)">分析中…</div></div>
+    <div style="padding:12px 24px;border-right:1px solid var(--gray-300)"><div style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--gray-500);margin-bottom:3px">來源</div><div id="ia-source-meta" style="font-size:12px;font-weight:700;font-family:var(--font-mono)">—</div></div>
+    <div style="padding:12px 24px"><div style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--gray-500);margin-bottom:3px">範疇</div><div id="ia-scope" style="font-size:12px;font-weight:700;font-family:var(--font-mono)">Global Retail · TW Focus</div></div>
+  </div>
+</div>
 
 <script>
 const CARD_CATS = ['台灣零售','百貨動態','電商','實體零售','快時尚','品牌動態','投資併購','供應鏈','消費趨勢','購物中心'];
@@ -570,14 +604,71 @@ async function generateSummary(idx) {
 }
 
 // 開啟產業分析頁面（新分頁）
-function openAnalysisPage(item) {
+async function openAnalysisPage(item) {
   if (!GEMINI_KEY) {
     alert('請先在上方輸入並儲存 Gemini API Key');
     return;
   }
-  // 把資料存到 sessionStorage，再開分析頁
-  sessionStorage.setItem('analysis_item', JSON.stringify(item));
-  window.open('page1_analysis.html', '_blank');
+
+  // 顯示分析區塊並滾動到那裡
+  const panel = document.getElementById('inline-analysis');
+  panel.style.display = 'block';
+  panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+  // 填入新聞資訊
+  document.getElementById('ia-news-title').textContent  = item.title || '';
+  document.getElementById('ia-news-source').textContent = (item.source||'') + (item.pubDate ? '  ·  ' + item.pubDate : '');
+  document.getElementById('ia-source-meta').textContent = item.source || '—';
+  document.getElementById('ia-status').textContent = '分析中…';
+  document.getElementById('ia-status').style.color = '';
+  if (item.link) {
+    const lnk = document.getElementById('ia-link');
+    lnk.href = item.link;
+    lnk.style.display = 'inline-block';
+  }
+
+  // 重置內容
+  document.getElementById('ia-focus').innerHTML =
+    '<div style="display:flex;gap:10px;align-items:center"><div style="width:20px;height:20px;border:2px solid rgba(255,255,255,.2);border-top-color:var(--red);border-radius:50%;animation:spin .7s linear infinite"></div><span style="color:rgba(255,255,255,.5);font-size:12px">AI 分析中，請稍候…</span></div>';
+  document.getElementById('ia-strategy').textContent = '分析生成中…';
+  document.getElementById('ia-strategy').style.fontStyle = 'italic';
+
+  const prompt = '你是資深零售產業分析師。針對以下新聞，用繁體中文分析，只回傳 JSON 不要 markdown：\n\n新聞標題：' + item.title + '\n新聞摘要：' + (item.desc||'（無摘要）') + '\n來源：' + (item.source||'') + '\n\n回傳格式：\n{"focus":"【事件】80字，說明核心事件、涉及品牌或市場","strategy":"【分析】120字，說明為何重要、對零售產業的影響與趨勢","source_short":"來源媒體簡稱","scope":"台灣零售或全球零售"}';
+
+  try {
+    const resp = await fetch(
+      'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' + GEMINI_KEY,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: { maxOutputTokens: 8192, temperature: 0.6, responseMimeType: 'application/json' }
+        })
+      }
+    );
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    const data = await resp.json();
+    const raw  = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    const finishReason = data.candidates?.[0]?.finishReason || '';
+    if (!raw) throw new Error('AI 未回傳內容');
+
+    const r = JSON.parse(raw.replace(/^```(?:json)?\s*/i,'').replace(/\s*```\s*$/,'').trim());
+
+    document.getElementById('ia-focus').innerHTML = '<div style="font-size:14px;line-height:1.85">' + escT(r.focus||'') + '</div>';
+    document.getElementById('ia-strategy').textContent = r.strategy || '';
+    document.getElementById('ia-strategy').style.fontStyle = 'normal';
+    document.getElementById('ia-source-meta').textContent = r.source_short || item.source || '—';
+    document.getElementById('ia-scope').textContent = r.scope || 'Global Retail · TW Focus';
+    document.getElementById('ia-status').textContent = finishReason === 'STOP' ? '正常 · ' + new Date().toLocaleTimeString('zh-TW') : finishReason;
+    document.getElementById('ia-status').style.color = finishReason === 'STOP' ? 'var(--red)' : '';
+
+  } catch(err) {
+    document.getElementById('ia-focus').innerHTML = '<div style="color:rgba(255,61,46,.9);font-size:13px">分析失敗：' + escT(err.message) + '</div>';
+    document.getElementById('ia-strategy').textContent = '';
+    document.getElementById('ia-status').textContent = '錯誤';
+    document.getElementById('ia-status').style.color = 'var(--red)';
+  }
 }
 
 // ════════════════════════════════════
@@ -645,14 +736,14 @@ function renderHeadlines(items, isAI) {
       '<div class="headline-num">' + (i + 1) + '.</div>' +
       '<div class="headline-body">' +
       '<div class="headline-title">' + escT(item.title) + '</div>' +
-      '<div class="headline-meta">' + escT(item.source||'') + (item.pubDate ? ' · ' + escT(item.pubDate) : '') + '</div>' +
-      '<div class="headline-btns">' +
+      '<div class="headline-meta">' +
+      escT(item.source||'') + (item.pubDate ? ' · ' + escT(item.pubDate) : '') +
       '<a href="' + escAttr(item.link) + '" target="_blank" rel="noopener" ' +
-      'style="padding:3px 10px;background:var(--black);color:#fff;font-size:10px;font-weight:700;letter-spacing:.06em;text-decoration:none">🔗 原始新聞</a>' +
+      'style="padding:2px 8px;background:var(--black);color:#fff;font-size:10px;font-weight:700;letter-spacing:.06em;text-decoration:none;white-space:nowrap">🔗 原始新聞</a>' +
       '<button id="ai-btn-h' + i + '" onclick="generateSummaryH(' + i + ')" ' +
       'data-title="' + escAttr(item.title) + '" data-desc="' + escAttr(item.desc||'') + '" ' +
       'data-source="' + escAttr(item.source||'') + '" data-link="' + escAttr(item.link||'') + '" ' +
-      'style="padding:3px 10px;background:var(--red);color:#fff;font-size:10px;font-weight:700;letter-spacing:.06em;border:none;cursor:pointer">✨ AI 摘要</button>' +
+      'style="padding:2px 8px;background:var(--red);color:#fff;font-size:10px;font-weight:700;letter-spacing:.06em;border:none;cursor:pointer;white-space:nowrap">✨ AI 摘要</button>' +
       '</div>' +
       '</div></div>';
   });
