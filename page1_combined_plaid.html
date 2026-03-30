@@ -418,7 +418,7 @@
 </head>
 <body>
 
-<!-- ① 本週全球零售新聞 -->
+<!-- ① 本週全球零售十大新聞 -->
 <section class="news-section">
   <div style="background:var(--black);padding:14px 32px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
     <div>
@@ -441,22 +441,21 @@
 
 <script>
 const CARD_CATS = ['台灣零售','百貨動態','電商','實體零售','快時尚','品牌動態','投資併購','供應鏈','消費趨勢','購物中心'];
-
+const GEMINI_KEY = 'AIzaSyDaBfQ8t8415bgExmUi5AX0vK8UxpZehCQ';
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbyyxp8hFOYxp2rtdektwOW_FEqDSZMjoz_dXdPB04cLq2x9CqqNiqRRGxOQrJUmYjTb/exec';
 
+// ════════════════════════════════════
+// 載入新聞
+// ════════════════════════════════════
 async function loadNews() {
   const statusEl = document.getElementById('news-status');
   const gridEl   = document.getElementById('news-grid');
-
   statusEl.textContent = '載入新聞中…';
   gridEl.innerHTML = '<div class="empty-state" style="padding:60px 20px"><div style="font-size:28px;margin-bottom:12px">📡</div><div>載入中，請稍候…</div></div>';
 
   try {
-    const resp = await fetch(
-      GAS_URL + '?q=' + encodeURIComponent('百貨 OR 零售 OR 量販 OR 超市 OR 電商 OR 網購 OR 快時尚 OR 購物中心 OR outlet OR 商場 OR 超商') + '&n=50'
-    );
+    const resp = await fetch(GAS_URL + '?q=' + encodeURIComponent('零售 OR 百貨 OR 電商 OR 購物中心 OR 快時尚 OR 量販 OR 超市 OR 超商') + '&n=50');
     if (!resp.ok) throw new Error('HTTP ' + resp.status);
-
     const data = await resp.json();
     if (data.status === 'error') throw new Error(data.message || '載入失敗');
     if (!data.news || !data.news.length) throw new Error('目前找不到相關新聞，請稍後再試');
@@ -472,24 +471,116 @@ async function loadNews() {
 
     renderCards(normalized);
     statusEl.textContent = '共 ' + normalized.length + ' 則（由新到舊）· Google News · ' + new Date().toLocaleString('zh-TW');
-
   } catch(err) {
     console.error(err);
-    gridEl.innerHTML =
+    document.getElementById('news-grid').innerHTML =
       '<div class="empty-state">' +
       '<div style="font-size:28px;margin-bottom:10px">📡</div>' +
       '<div style="font-weight:600;margin-bottom:8px">新聞載入失敗</div>' +
-      '<div style="font-size:11px;font-family:var(--font-mono);background:var(--gray-100);padding:8px 12px;max-width:500px;margin:8px auto 14px;text-align:left">' + escT(err.message) + '</div>' +
+      '<div style="font-size:11px;font-family:var(--font-mono);background:var(--gray-100);padding:8px 12px;max-width:500px;margin:8px auto 14px">' + escT(err.message) + '</div>' +
       '<button onclick="loadNews()" style="padding:8px 18px;background:var(--red);color:#fff;border:none;font-size:12px;font-weight:700;cursor:pointer;margin-right:8px">🔄 重試</button>' +
-      '<a href="https://news.google.com/search?q=' + encodeURIComponent('零售 百貨 電商') + '&hl=zh-TW&gl=TW" target="_blank" style="padding:8px 16px;background:transparent;border:1px solid var(--gray-300);color:var(--gray-700);font-size:12px;text-decoration:none">🔗 Google 新聞</a>' +
+      '<a href="https://news.google.com/search?q=' + encodeURIComponent('零售 百貨 電商') + '&hl=zh-TW&gl=TW" target="_blank" style="padding:8px 16px;border:1px solid var(--gray-300);color:var(--gray-700);font-size:12px;text-decoration:none">🔗 Google 新聞</a>' +
       '</div>';
-    statusEl.textContent = '';
+    document.getElementById('news-status').textContent = '';
   }
 }
 
 // ════════════════════════════════════
-// 渲染新聞卡片
+// Gemini AI 摘要（單則）
 // ════════════════════════════════════
+async function generateSummary(idx) {
+  const btn  = document.getElementById('ai-btn-' + idx);
+  const box  = document.getElementById('ai-box-' + idx);
+  const title = btn.dataset.title;
+  const desc  = btn.dataset.desc;
+  const source = btn.dataset.source;
+
+  // 已展開 → 收起
+  if (box.style.display === 'block') {
+    box.style.display = 'none';
+    btn.textContent = '✨ AI 摘要';
+    return;
+  }
+
+  // 已有內容 → 直接展開
+  if (box.dataset.done === '1') {
+    box.style.display = 'block';
+    btn.textContent = '✕ 收起';
+    return;
+  }
+
+  btn.textContent = '⏳ 生成中…';
+  btn.disabled = true;
+  box.style.display = 'block';
+  box.innerHTML = '<div style="color:var(--gray-500);font-size:12px;padding:8px 0">AI 分析中，請稍候…</div>';
+
+  const prompt = `請根據以下新聞資訊，用繁體中文寫出 100-150 字的重點摘要，說明事件背景、影響與意義。
+
+標題：${title}
+摘要片段：${desc}
+來源：${source}
+
+要求：
+1. 直接說重點，不要說「本文」「這則新聞」
+2. 包含事件的商業影響或產業意義
+3. 語氣客觀專業`;
+
+  try {
+    const resp = await fetch(
+      'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + GEMINI_KEY,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: { maxOutputTokens: 300, temperature: 0.5 }
+        })
+      }
+    );
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    const data = await resp.json();
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    if (!text) throw new Error('AI 未回傳內容');
+
+    box.innerHTML =
+      '<div style="border-left:3px solid var(--red);padding:8px 12px;background:#fff8f8">' +
+      '<div style="font-size:10px;font-weight:700;letter-spacing:.08em;color:var(--red);margin-bottom:6px">✨ AI 摘要</div>' +
+      '<div style="font-size:13px;line-height:1.7;color:var(--black)">' + escT(text) + '</div>' +
+      '</div>';
+    box.dataset.done = '1';
+    btn.textContent = '✕ 收起';
+    btn.disabled = false;
+  } catch(err) {
+    box.innerHTML = '<div style="color:var(--red);font-size:12px;padding:8px 0">生成失敗：' + escT(err.message) + '</div>';
+    btn.textContent = '✨ AI 摘要';
+    btn.disabled = false;
+  }
+}
+
+// ════════════════════════════════════
+// 渲染卡片
+// ════════════════════════════════════
+function cardButtons(item, idx) {
+  return '<div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">' +
+    '<a href="' + escAttr(item.link) + '" target="_blank" rel="noopener" ' +
+    'style="padding:4px 10px;background:var(--black);color:#fff;font-size:10px;font-weight:700;' +
+    'letter-spacing:.06em;text-decoration:none;white-space:nowrap">🔗 原始新聞</a>' +
+    '<button id="ai-btn-' + idx + '" onclick="generateSummary(' + idx + ')" ' +
+    'data-title="' + escAttr(item.title) + '" ' +
+    'data-desc="' + escAttr(item.desc) + '" ' +
+    'data-source="' + escAttr(item.source) + '" ' +
+    'style="padding:4px 10px;background:var(--red);color:#fff;font-size:10px;font-weight:700;' +
+    'letter-spacing:.06em;border:none;cursor:pointer;white-space:nowrap">✨ AI 摘要</button>' +
+    '</div>' +
+    '<div id="ai-box-' + idx + '" style="display:none;margin-top:8px"></div>';
+}
+
+function cardFooter(item) {
+  return '<div class="news-card-footer">' +
+    '<span style="font-size:11px;color:var(--gray-500)">' +
+    escT(item.source || '') + (item.pubDate ? '&nbsp;·&nbsp;' + escT(item.pubDate) : '') +
+    '</span></div>';
+}
 
 function renderCards(items) {
   const grid = document.getElementById('news-grid');
@@ -497,23 +588,16 @@ function renderCards(items) {
 
   const hero = items[0];
 
-  function cardFooter(item) {
-    return '<div class="news-card-footer">' +
-      '<span style="font-size:11px;color:var(--gray-500)">' +
-      escT(item.source || '') + (item.pubDate ? '&nbsp;·&nbsp;' + escT(item.pubDate) : '') +
-      '</span></div>';
-  }
-
-  // 第一則：大圖橫幅
-  var html = '<a href="' + escAttr(hero.link) + '" target="_blank" rel="noopener" style="text-decoration:none;color:inherit;display:block;margin-bottom:12px">' +
-    '<div class="news-hero-card">' +
+  // 第一則：大橫幅
+  var html = '<div class="news-hero-card" style="margin-bottom:12px">' +
     '<div class="news-hero-body">' +
     '<span class="news-hero-rank">#1</span>' +
     '<div class="news-hero-cat">' + escT(hero.category) + '</div>' +
     '<div class="news-hero-title">' + escT(hero.title) + '</div>' +
     (hero.desc ? '<div class="news-hero-desc">' + escT(hero.desc) + '</div>' : '') +
     cardFooter(hero) +
-    '</div></div></a>';
+    cardButtons(hero, 0) +
+    '</div></div>';
 
   // 其餘：每排 3 則
   var rest = items.slice(1);
@@ -521,15 +605,15 @@ function renderCards(items) {
     html += '<div class="news-row3">';
     rest.slice(rs, rs + 3).forEach(function(item, ri) {
       var i = rs + ri + 1;
-      html += '<a href="' + escAttr(item.link) + '" target="_blank" rel="noopener" style="text-decoration:none;color:inherit;display:flex;flex-direction:column">' +
-        '<div class="news-card">' +
+      html += '<div class="news-card">' +
         '<div class="news-card-body">' +
         '<div class="news-card-rank">#' + (i + 1) + '</div>' +
         '<div class="news-card-cat">' + escT(item.category) + '</div>' +
         '<div class="news-card-title">' + escT(item.title) + '</div>' +
         (item.desc ? '<div class="news-card-desc">' + escT(item.desc) + '</div>' : '') +
         cardFooter(item) +
-        '</div></div></a>';
+        cardButtons(item, i) +
+        '</div></div>';
     });
     html += '</div>';
   }
