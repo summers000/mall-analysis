@@ -423,7 +423,7 @@
   <div style="background:var(--black);padding:14px 32px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
     <div>
       <div style="font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--red);margin-bottom:3px">Weekly Intelligence</div>
-      <div style="font-size:22px;font-weight:800;color:var(--white);letter-spacing:-.01em">每日全球零售新聞</div>
+      <div style="font-size:22px;font-weight:800;color:var(--white);letter-spacing:-.01em">本週全球零售新聞</div>
     </div>
     <div style="display:flex;gap:8px;align-items:center">
       <button onclick="loadNews()" style="padding:8px 18px;background:var(--red);color:#fff;border:none;font-size:12px;font-weight:700;letter-spacing:.06em;cursor:pointer;text-transform:uppercase">🔄 重新整理</button>
@@ -567,12 +567,22 @@ async function generateSummary(idx) {
     }
     if (!resp.ok) throw new Error('HTTP ' + resp.status);
     const data = await resp.json();
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-    if (!text) throw new Error('AI 未回傳內容');
+    const candidate    = data.candidates?.[0];
+    const text         = candidate?.content?.parts?.[0]?.text || '';
+    const finishReason = candidate?.finishReason || 'UNKNOWN';
+    const tokenCount   = data.usageMetadata?.candidatesTokenCount || 0;
 
+    // Debug：開 F12 Console 可看到截斷原因
+    console.log('[Gemini]', { finishReason, tokenCount, textLen: text.length });
+
+    if (!text) throw new Error('AI 未回傳內容（finishReason: ' + finishReason + '）');
+    if (finishReason === 'SAFETY') throw new Error('內容被安全過濾器攔截，請換一則新聞試試');
+
+    const wordCount = text.replace(/\s/g,'').length;
     box.innerHTML =
       '<div style="border-left:3px solid var(--red);padding:8px 12px;background:#fff8f8">' +
-      '<div style="font-size:10px;font-weight:700;letter-spacing:.08em;color:var(--red);margin-bottom:6px">✨ AI 摘要</div>' +
+      '<div style="font-size:10px;font-weight:700;letter-spacing:.08em;color:var(--red);margin-bottom:6px">' +
+      '✨ AI 摘要 <span style="font-weight:400;color:var(--gray-500);margin-left:8px">' + wordCount + ' 字 · ' + finishReason + '</span></div>' +
       '<div style="font-size:13px;line-height:1.8;color:var(--black)">' + escT(text).replace(/\n/g,'<br>') + '</div>' +
       '</div>';
     box.dataset.done = '1';
