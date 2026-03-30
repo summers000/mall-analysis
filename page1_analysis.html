@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>新聞分析報告</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --red:#FF3D2E;--red-dark:#D42D1F;
+  --black:#111111;--gray-900:#1A1A1A;--gray-700:#444;
+  --gray-500:#777;--gray-300:#CCC;--gray-100:#F5F5F5;--white:#FFFFFF;
+  --font-display:'Noto Sans TC','Microsoft JhengHei',sans-serif;
+  --font-mono:'DM Mono','Courier New',monospace;
+}
+html,body{font-family:var(--font-display);font-size:15px;line-height:1.6;background:var(--white);color:var(--black);-webkit-font-smoothing:antialiased}
+
+/* ── Hero（黑底左右） ── */
+.hero{background:var(--black);display:grid;grid-template-columns:1fr 1fr;min-height:280px;position:relative;overflow:hidden}
+.hero::after{content:'';position:absolute;top:-40px;right:-40px;width:180px;height:180px;background:var(--red);border-radius:50%;opacity:.85}
+.hero-left{padding:40px;display:flex;flex-direction:column;justify-content:space-between;position:relative;z-index:1}
+.hero-label{font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--red);margin-bottom:10px}
+.hero-title{font-size:clamp(30px,5vw,52px);font-weight:800;color:var(--white);line-height:1.05;letter-spacing:-.02em;margin-bottom:14px}
+.hero-news-title{font-size:13px;color:rgba(255,255,255,.6);line-height:1.55;max-width:320px;margin-bottom:20px}
+.hero-source{font-size:11px;color:rgba(255,255,255,.35);font-family:var(--font-mono);letter-spacing:.04em}
+.hero-right{padding:40px 40px 40px 32px;border-left:1px solid rgba(255,255,255,.1);position:relative;z-index:1;display:flex;flex-direction:column}
+.focus-label{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--red);border-left:3px solid var(--red);padding-left:10px;margin-bottom:14px}
+.focus-content{font-size:14px;color:rgba(255,255,255,.85);line-height:1.8;flex:1}
+.focus-content.loading{display:flex;flex-direction:column;gap:10px;justify-content:center;align-items:flex-start}
+.focus-link{display:none;margin-top:18px;padding:8px 18px;background:var(--red);color:#fff;font-size:11px;font-weight:700;letter-spacing:.08em;text-decoration:none;text-transform:uppercase}
+.focus-link:hover{background:var(--red-dark)}
+
+/* ── Strategy Banner（紅底） ── */
+.strategy-banner{background:var(--red);display:grid;grid-template-columns:220px 1fr;min-height:120px}
+.strategy-left{padding:32px 40px;border-right:1px solid rgba(255,255,255,.2);display:flex;align-items:center}
+.strategy-tagline{font-size:clamp(20px,3vw,30px);font-weight:800;color:var(--white);line-height:1.1;letter-spacing:-.01em}
+.strategy-right{padding:32px 40px;display:flex;align-items:center}
+.strategy-text{font-size:14px;color:rgba(255,255,255,.9);line-height:1.75;max-width:520px}
+.strategy-text.placeholder{color:rgba(255,255,255,.5);font-style:italic}
+
+/* ── 指標 bar ── */
+.metrics-bar{background:var(--gray-100);border-top:1px solid var(--gray-300);display:grid;grid-template-columns:repeat(3,1fr)}
+.metric-item{padding:14px 24px;border-right:1px solid var(--gray-300)}
+.metric-item:last-child{border-right:none}
+.metric-lbl{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--gray-500);margin-bottom:3px}
+.metric-val{font-size:12px;font-weight:700;font-family:var(--font-mono)}
+.metric-val.high{color:var(--red)}.metric-val.mid{color:#D97706}.metric-val.low{color:var(--gray-500)}
+
+/* ── 三大趨勢（白底） ── */
+.trends-section{padding:40px;background:var(--white)}
+.trends-title{font-size:20px;font-weight:800;margin-bottom:24px;padding-bottom:12px;border-bottom:2px solid var(--gray-100)}
+.trends-grid{display:grid;grid-template-columns:repeat(3,1fr);border:1px solid var(--gray-300)}
+.trend-col{padding:24px;border-right:1px solid var(--gray-300)}
+.trend-col:last-child{border-right:none}
+.trend-col-title{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;margin-bottom:14px;padding-bottom:8px;border-bottom:2px solid}
+.trend-col:nth-child(1) .trend-col-title{color:var(--black);border-color:var(--black)}
+.trend-col:nth-child(2) .trend-col-title{color:var(--red);border-color:var(--red)}
+.trend-col:nth-child(3) .trend-col-title{color:var(--gray-700);border-color:var(--gray-300)}
+.trend-item{display:flex;gap:8px;font-size:12px;color:var(--gray-700);line-height:1.6;margin-bottom:10px}
+.trend-item::before{content:'●';flex-shrink:0;font-size:8px;margin-top:5px}
+.trend-col:nth-child(1) .trend-item::before{color:var(--black)}
+.trend-col:nth-child(2) .trend-item::before{color:var(--red)}
+.trend-col:nth-child(3) .trend-item::before{color:var(--gray-500)}
+.trend-placeholder{font-size:12px;color:var(--gray-300);font-style:italic}
+
+/* ── Footer ── */
+.footer-bar{background:var(--black);padding:16px 40px;display:flex;align-items:center;gap:16px}
+.regen-btn{padding:9px 22px;background:var(--red);color:#fff;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;border:none;cursor:pointer;font-family:var(--font-display)}
+.regen-btn:hover{background:var(--red-dark)}.regen-btn:disabled{opacity:.45;cursor:not-allowed}
+.footer-meta{font-size:11px;font-family:var(--font-mono);color:rgba(255,255,255,.35);letter-spacing:.04em}
+
+/* Spinner */
+.spinner{width:22px;height:22px;border:2px solid rgba(255,255,255,.2);border-top-color:var(--red);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-left">
+    <div>
+      <div class="hero-label">AI Analysis</div>
+      <div class="hero-title">新聞分析<br>報告</div>
+      <div class="hero-news-title" id="hero-news-title">載入中…</div>
+    </div>
+    <div class="hero-source" id="hero-source"></div>
+  </div>
+  <div class="hero-right">
+    <div class="focus-label">焦點分析</div>
+    <div class="focus-content loading" id="focus-content">
+      <div class="spinner"></div>
+      <div style="color:rgba(255,255,255,.5);font-size:12px">AI 分析中，請稍候…</div>
+    </div>
+    <a class="focus-link" id="focus-link" href="#" target="_blank" rel="noopener">🔗 閱讀原始新聞</a>
+  </div>
+</div>
+
+<div class="strategy-banner">
+  <div class="strategy-left">
+    <div class="strategy-tagline">Strategy<br>is the<br>key.</div>
+  </div>
+  <div class="strategy-right">
+    <div class="strategy-text placeholder" id="strategy-text">分析結果將在此處生成。請填入 Gemini Key 並選擇一則新聞後點擊「AI 摘要」。</div>
+  </div>
+</div>
+
+<div class="metrics-bar">
+  <div class="metric-item"><div class="metric-lbl">狀態</div><div class="metric-val" id="m-status">分析中…</div></div>
+  <div class="metric-item"><div class="metric-lbl">來源</div><div class="metric-val" id="m-source">—</div></div>
+  <div class="metric-item"><div class="metric-lbl">範疇</div><div class="metric-val" id="m-scope">Global Retail · TW Focus</div></div>
+</div>
+
+<div class="trends-section">
+  <div class="trends-title">三大趨勢與建議</div>
+  <div class="trends-grid">
+    <div class="trend-col">
+      <div class="trend-col-title">市場趨勢</div>
+      <div id="trend-market"><div class="trend-placeholder">分析生成後顯示…</div></div>
+    </div>
+    <div class="trend-col">
+      <div class="trend-col-title">行動建議</div>
+      <div id="trend-action"><div class="trend-placeholder">分析生成後顯示…</div></div>
+    </div>
+    <div class="trend-col">
+      <div class="trend-col-title">診斷資訊</div>
+      <div id="trend-diag"><div class="trend-placeholder">分析生成後顯示…</div></div>
+    </div>
+  </div>
+</div>
+
+<div class="footer-bar">
+  <button class="regen-btn" id="regen-btn" onclick="runAnalysis()" disabled>🔄 重新生成</button>
+  <div class="footer-meta" id="footer-meta">等待分析…</div>
+</div>
+
+<script>
+const GEMINI_KEY = localStorage.getItem('gemini_key') || '';
+let currentItem = null;
+
+function init() {
+  const raw = sessionStorage.getItem('analysis_item');
+  if (!raw) {
+    showError('找不到新聞資料，請從新聞列表點擊 AI 摘要按鈕。');
+    return;
+  }
+  currentItem = JSON.parse(raw);
+  document.getElementById('hero-news-title').textContent = currentItem.title || '';
+  document.getElementById('hero-source').textContent =
+    (currentItem.source || '') + (currentItem.pubDate ? '  ·  ' + currentItem.pubDate : '');
+  document.getElementById('m-source').textContent = currentItem.source || '—';
+  document.title = '新聞分析 — ' + (currentItem.title || '').slice(0, 30);
+  if (currentItem.link) {
+    const lnk = document.getElementById('focus-link');
+    lnk.href = currentItem.link;
+    lnk.style.display = 'inline-block';
+  }
+  if (!GEMINI_KEY) { showError('請先在新聞頁面輸入並儲存 Gemini API Key。'); return; }
+  runAnalysis();
+}
+
+async function runAnalysis() {
+  const btn = document.getElementById('regen-btn');
+  btn.disabled = true;
+  document.getElementById('m-status').textContent = '分析中…';
+  document.getElementById('m-status').className = 'metric-val';
+  document.getElementById('footer-meta').textContent = '正在呼叫 Gemini API…';
+  document.getElementById('focus-content').className = 'focus-content loading';
+  document.getElementById('focus-content').innerHTML =
+    '<div class="spinner"></div><div style="color:rgba(255,255,255,.5);font-size:12px">AI 分析中，請稍候（約 5-10 秒）…</div>';
+  document.getElementById('strategy-text').className = 'strategy-text placeholder';
+  document.getElementById('strategy-text').textContent = '分析生成中，請稍候…';
+  ['trend-market','trend-action','trend-diag'].forEach(id => {
+    document.getElementById(id).innerHTML = '<div class="trend-placeholder">分析生成後顯示…</div>';
+  });
+
+  const item = currentItem;
+  const prompt = '你是資深零售產業分析師。針對以下新聞，用繁體中文分析，只回傳 JSON 不要 markdown：\n\n新聞標題：' + item.title + '\n新聞摘要：' + (item.desc||'（無摘要）') + '\n來源：' + (item.source||'') + '\n\n回傳格式：\n{"focus":"焦點分析80字，說明此新聞核心意義","strategy":"策略洞察100字，說明企業或投資人應如何解讀","market_trends":["市場趨勢1","市場趨勢2","市場趨勢3"],"action_items":["行動建議1","行動建議2","行動建議3"],"diag_status":"正常","diag_source":"來源媒體簡稱","diag_scope":"台灣零售或全球零售","relevance":"高或中或低","impact":"高或中或低","trend":"正向或中性或負向"}';
+
+  try {
+    const resp = await fetch(
+      'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' + GEMINI_KEY,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: { maxOutputTokens: 8192, temperature: 0.6, responseMimeType: 'application/json' }
+        })
+      }
+    );
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    const data = await resp.json();
+    const raw  = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    const finishReason = data.candidates?.[0]?.finishReason || 'UNKNOWN';
+    if (!raw) throw new Error('AI 未回傳內容');
+
+    const clean = raw.replace(/^```(?:json)?\s*/i,'').replace(/\s*```\s*$/,'').trim();
+    const r = JSON.parse(clean);
+
+    // 焦點分析
+    document.getElementById('focus-content').className = 'focus-content';
+    document.getElementById('focus-content').innerHTML = '<div style="font-size:14px;line-height:1.85">' + escT(r.focus||'') + '</div>';
+
+    // Strategy
+    document.getElementById('strategy-text').className = 'strategy-text';
+    document.getElementById('strategy-text').textContent = r.strategy || '';
+
+    // 趨勢清單
+    function renderList(id, items) {
+      const el = document.getElementById(id);
+      if (!items||!items.length) { el.innerHTML='<div class="trend-placeholder">無資料</div>'; return; }
+      el.innerHTML = items.map(t => '<div class="trend-item">' + escT(t) + '</div>').join('');
+    }
+    renderList('trend-market', r.market_trends);
+    renderList('trend-action', r.action_items);
+
+    const now = new Date();
+    const diagItems = [
+      '狀態：' + (r.diag_status||'正常') + ' ' + now.toLocaleTimeString('zh-TW'),
+      '來源：' + (r.diag_source||item.source||'—'),
+      '範疇：' + (r.diag_scope||'Global Retail · TW Focus'),
+      '產業相關度：' + (r.relevance||'—'),
+      '市場影響力：' + (r.impact||'—'),
+      '趨勢方向：' + (r.trend||'—'),
+    ];
+    renderList('trend-diag', diagItems);
+
+    // 指標 bar
+    document.getElementById('m-status').textContent = finishReason === 'STOP' ? '正常 ' + now.toLocaleTimeString('zh-TW') : finishReason;
+    document.getElementById('m-status').className = 'metric-val ' + (finishReason==='STOP'?'high':'mid');
+    document.getElementById('m-source').textContent = r.diag_source || item.source || '—';
+    document.getElementById('m-scope').textContent  = r.diag_scope  || 'Global Retail · TW Focus';
+    document.getElementById('footer-meta').textContent = '生成完成 · ' + now.toLocaleString('zh-TW') + ' · ' + finishReason;
+
+    btn.disabled = false;
+  } catch(err) {
+    showError('分析失敗：' + err.message);
+    document.getElementById('footer-meta').textContent = '錯誤：' + err.message;
+    btn.disabled = false;
+  }
+}
+
+function showError(msg) {
+  document.getElementById('focus-content').className = 'focus-content';
+  document.getElementById('focus-content').innerHTML = '<div style="color:rgba(255,61,46,.9);font-size:13px">' + escT(msg) + '</div>';
+  document.getElementById('m-status').textContent = '錯誤';
+  document.getElementById('m-status').className = 'metric-val low';
+  document.getElementById('regen-btn').disabled = false;
+}
+
+function escT(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
