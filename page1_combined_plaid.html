@@ -527,7 +527,7 @@ async function generateSummary(idx) {
   box.style.display = 'block';
   box.innerHTML = '<div style="color:var(--gray-500);font-size:12px;padding:8px 0">AI 分析中，請稍候…</div>';
 
-  const prompt = `請根據以下新聞資訊，用繁體中文寫出 100-150 字的重點摘要，說明事件背景、影響與意義。
+  const prompt = `請根據以下新聞資訊，用繁體中文寫出 180-220 字的重點摘要，說明事件背景、影響與產業意義，內容要具體充實。
 
 標題：${title}
 摘要片段：${desc}
@@ -549,7 +549,7 @@ async function generateSummary(idx) {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             contents: [{ parts: [{ text: prompt }] }],
-            generationConfig: { maxOutputTokens: 300, temperature: 0.5 }
+            generationConfig: { maxOutputTokens: 600, temperature: 0.6 }
           })
         }
       );
