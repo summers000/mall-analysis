@@ -346,18 +346,15 @@
   .news-card { background: var(--white); border: 1px solid var(--gray-300); display: flex; flex-direction: column; transition: border-color .2s; overflow: visible !important; height: auto !important; }
   /* 頭條卡片 */
   /* 頭條 grid：左大右四小 */
-  #headline-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
-  #headline-main { }  /* 左側大卡 */
-  #headline-sub  { display:grid; grid-template-rows:repeat(2,1fr); grid-template-columns:repeat(2,1fr); gap:10px; }
-  .headline-card { background: var(--white); border: 1px solid var(--gray-300); display: flex; flex-direction: column; cursor: pointer; transition: border-color .15s, box-shadow .15s; }
-  .headline-card:hover { border-color: var(--red); box-shadow: 0 2px 12px rgba(255,61,46,.12); }
-  .headline-card-num { font-size:10px;font-weight:800;font-family:var(--font-mono);color:var(--white);background:var(--red);padding:2px 7px;display:inline-block;margin-bottom:8px; }
-  .headline-card-cat { font-size:9px;font-weight:700;color:var(--red);text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px; }
-  .headline-card-title { font-size:13px;font-weight:800;color:var(--black);line-height:1.4;flex:1; }
-  .headline-card-footer { font-size:10px;color:var(--gray-500);margin-top:8px;padding-top:6px;border-top:1px solid var(--gray-100); }
-  .headline-card-body { padding:12px;display:flex;flex-direction:column;flex:1; }
-  @media (max-width: 900px) { #headline-grid { grid-template-columns: repeat(3,1fr) !important; } }
-  @media (max-width: 600px) { #headline-grid { grid-template-columns: 1fr !important; } }
+  /* 頭條清單樣式 */
+  .headline-row { display:flex; align-items:flex-start; gap:14px; padding:14px 0; border-bottom:1px solid var(--gray-100); }
+  .headline-row:first-child { padding-top:0; }
+  .headline-row:last-child { border-bottom:none; }
+  .headline-num { font-size:16px; font-weight:800; font-family:var(--font-mono); color:var(--red); min-width:24px; flex-shrink:0; line-height:1.4; }
+  .headline-body { flex:1; min-width:0; }
+  .headline-title { font-size:14px; font-weight:700; color:var(--black); line-height:1.45; margin-bottom:4px; }
+  .headline-meta { font-size:11px; color:var(--gray-500); margin-bottom:6px; }
+  .headline-btns { display:flex; gap:6px; flex-wrap:wrap; }
     @media (max-width: 700px) { .news-row3 { grid-template-columns: 1fr; } .news-hero-card { grid-template-columns: 1fr; } }
 
   /* Small card */
@@ -460,10 +457,7 @@
       <div style="font-size:14px;font-weight:800;letter-spacing:.06em;text-transform:uppercase">本日焦點頭條</div>
       <div id="headline-badge" style="font-size:10px;background:var(--red);color:#fff;padding:2px 8px;font-weight:700;letter-spacing:.06em">AI 精選</div>
     </div>
-    <div style="padding:0 32px 16px;display:grid;grid-template-columns:1fr 1fr;gap:12px" id="headline-grid-wrap">
-      <div id="headline-main"></div>
-      <div id="headline-sub" style="display:grid;grid-template-rows:repeat(2,1fr);grid-template-columns:repeat(2,1fr);gap:10px"></div>
-    </div>
+    <div id="headline-list" style="padding:0 32px 16px"></div>
     <div style="margin:0 32px 16px;border-bottom:2px solid var(--gray-100)"></div>
   </div>
   <!-- 一般新聞 -->
@@ -636,8 +630,7 @@ ${titles}
 
 function renderHeadlines(items, isAI) {
   const sec   = document.getElementById('headline-section');
-  const mainEl = document.getElementById('headline-main');
-  const subEl  = document.getElementById('headline-sub');
+  const listEl = document.getElementById('headline-list');
   const label = document.getElementById('news-section-label');
   if (!items.length) return;
 
@@ -645,47 +638,25 @@ function renderHeadlines(items, isAI) {
   label.style.display = 'flex';
   if (!isAI) document.getElementById('headline-badge').textContent = '最新';
 
-  const nums = ['①','②','③','④','⑤'];
-
-  // 第一則：左側大卡
-  var hero = items[0];
-  mainEl.innerHTML =
-    '<div class="headline-card" style="height:100%;min-height:180px">' +
-    '<div class="headline-card-body" style="height:100%">' +
-    '<div class="headline-card-num">①</div>' +
-    '<div class="headline-card-cat">' + escT(hero.category) + '</div>' +
-    '<div class="headline-card-title" style="font-size:17px">' + escT(hero.title) + '</div>' +
-    '<div class="headline-card-footer">' + escT(hero.source||'') + (hero.pubDate ? ' · ' + escT(hero.pubDate) : '') + '</div>' +
-    '<div style="display:flex;gap:5px;margin-top:10px;flex-wrap:wrap">' +
-    '<a href="' + escAttr(hero.link) + '" target="_blank" rel="noopener" style="padding:4px 10px;background:var(--black);color:#fff;font-size:10px;font-weight:700;letter-spacing:.06em;text-decoration:none">🔗 原始新聞</a>' +
-    '<button id="ai-btn-h0" onclick="generateSummaryH(0)" ' +
-    'data-title="' + escAttr(hero.title) + '" data-desc="' + escAttr(hero.desc||'') + '" data-source="' + escAttr(hero.source||'') + '" data-link="' + escAttr(hero.link||'') + '" ' +
-    'style="padding:4px 10px;background:var(--red);color:#fff;font-size:10px;font-weight:700;letter-spacing:.06em;border:none;cursor:pointer">✨ AI 摘要</button>' +
-    '</div>' +
-    '<div id="ai-box-h0" style="display:none;margin-top:8px"></div>' +
-    '</div></div>';
-
-  // 其餘四則：右側 2x2
-  var subHtml = '';
-  items.slice(1,5).forEach(function(item, i) {
-    var idx = i + 1;
-    subHtml +=
-      '<div class="headline-card">' +
-      '<div class="headline-card-body">' +
-      '<div class="headline-card-num">' + (nums[idx]||idx+1) + '</div>' +
-      '<div class="headline-card-cat">' + escT(item.category) + '</div>' +
-      '<div class="headline-card-title">' + escT(item.title) + '</div>' +
-      '<div class="headline-card-footer">' + escT(item.source||'') + (item.pubDate ? ' · ' + escT(item.pubDate) : '') + '</div>' +
-      '<div style="display:flex;gap:5px;margin-top:8px;flex-wrap:wrap">' +
-      '<a href="' + escAttr(item.link) + '" target="_blank" rel="noopener" style="padding:3px 9px;background:var(--black);color:#fff;font-size:10px;font-weight:700;letter-spacing:.06em;text-decoration:none">🔗 原始新聞</a>' +
-      '<button id="ai-btn-h' + idx + '" onclick="generateSummaryH(' + idx + ')" ' +
-      'data-title="' + escAttr(item.title) + '" data-desc="' + escAttr(item.desc||'') + '" data-source="' + escAttr(item.source||'') + '" data-link="' + escAttr(item.link||'') + '" ' +
-      'style="padding:3px 9px;background:var(--red);color:#fff;font-size:10px;font-weight:700;letter-spacing:.06em;border:none;cursor:pointer">✨ AI 摘要</button>' +
+  var html = '';
+  items.slice(0, 5).forEach(function(item, i) {
+    html +=
+      '<div class="headline-row">' +
+      '<div class="headline-num">' + (i + 1) + '.</div>' +
+      '<div class="headline-body">' +
+      '<div class="headline-title">' + escT(item.title) + '</div>' +
+      '<div class="headline-meta">' + escT(item.source||'') + (item.pubDate ? ' · ' + escT(item.pubDate) : '') + '</div>' +
+      '<div class="headline-btns">' +
+      '<a href="' + escAttr(item.link) + '" target="_blank" rel="noopener" ' +
+      'style="padding:3px 10px;background:var(--black);color:#fff;font-size:10px;font-weight:700;letter-spacing:.06em;text-decoration:none">🔗 原始新聞</a>' +
+      '<button id="ai-btn-h' + i + '" onclick="generateSummaryH(' + i + ')" ' +
+      'data-title="' + escAttr(item.title) + '" data-desc="' + escAttr(item.desc||'') + '" ' +
+      'data-source="' + escAttr(item.source||'') + '" data-link="' + escAttr(item.link||'') + '" ' +
+      'style="padding:3px 10px;background:var(--red);color:#fff;font-size:10px;font-weight:700;letter-spacing:.06em;border:none;cursor:pointer">✨ AI 摘要</button>' +
       '</div>' +
-      '<div id="ai-box-h' + idx + '" style="display:none;margin-top:6px"></div>' +
       '</div></div>';
   });
-  subEl.innerHTML = subHtml;
+  listEl.innerHTML = html;
 }
 
 // AI 摘要（頭條卡片專用）— 開新分析頁面
