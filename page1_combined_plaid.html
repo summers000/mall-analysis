@@ -430,6 +430,14 @@
       <button onclick="openGoogleNews()" style="padding:8px 16px;background:transparent;border:1px solid rgba(255,255,255,.3);color:rgba(255,255,255,.7);font-size:12px;cursor:pointer">🔗 Google 新聞</button>
     </div>
   </div>
+  <div id="gemini-key-bar" style="padding:8px 32px;background:#f9f9f9;border-bottom:1px solid var(--gray-300);display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+    <span style="font-size:11px;font-weight:700;letter-spacing:.06em;color:var(--gray-500);text-transform:uppercase">Gemini Key</span>
+    <input id="gemini-key-input" type="password" placeholder="貼上你的 Gemini API Key…" autocomplete="off"
+      style="flex:1;min-width:200px;max-width:360px;padding:5px 10px;font-size:12px;border:1px solid var(--gray-300);font-family:var(--font-mono);outline:none">
+    <button onclick="saveGeminiKey()" style="padding:5px 14px;background:var(--black);color:#fff;font-size:11px;font-weight:700;border:none;cursor:pointer;letter-spacing:.06em">儲存</button>
+    <button onclick="clearGeminiKey()" style="padding:5px 14px;background:transparent;border:1px solid var(--gray-300);color:var(--gray-500);font-size:11px;cursor:pointer">清除</button>
+    <span id="gemini-key-status" style="font-size:11px;color:var(--gray-500)"></span>
+  </div>
   <div id="news-status"></div>
   <div id="news-grid" style="padding:0 32px 32px">
     <div class="empty-state">載入中，請稍候…</div>
@@ -441,7 +449,7 @@
 
 <script>
 const CARD_CATS = ['台灣零售','百貨動態','電商','實體零售','快時尚','品牌動態','投資併購','供應鏈','消費趨勢','購物中心'];
-const GEMINI_KEY = 'AIzaSyDaBfQ8t8415bgExmUi5AX0vK8UxpZehCQ';
+let GEMINI_KEY = localStorage.getItem('gemini_key') || '';
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbyyxp8hFOYxp2rtdektwOW_FEqDSZMjoz_dXdPB04cLq2x9CqqNiqRRGxOQrJUmYjTb/exec';
 
 // ════════════════════════════════════
@@ -509,6 +517,11 @@ async function generateSummary(idx) {
     return;
   }
 
+  // 檢查是否有 Key
+  if (!GEMINI_KEY) {
+    alert('請先在上方輸入並儲存 Gemini API Key');
+    return;
+  }
   btn.textContent = '⏳ 生成中…';
   btn.disabled = true;
   box.style.display = 'block';
@@ -530,7 +543,7 @@ async function generateSummary(idx) {
     let resp, retries = 0;
     while (retries <= 3) {
       resp = await fetch(
-        'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + GEMINI_KEY,
+        'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=' + GEMINI_KEY,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -639,7 +652,38 @@ function openGoogleNews() {
 function escT(s)    { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 function escAttr(s) { return String(s||'').replace(/"/g,'&quot;').replace(/'/g,"&#39;"); }
 
-document.addEventListener('DOMContentLoaded', () => { loadNews(); });
+// ── Gemini Key 管理 ──
+function saveGeminiKey() {
+  const val = document.getElementById('gemini-key-input').value.trim();
+  if (!val) { alert('請貼上 Gemini API Key'); return; }
+  GEMINI_KEY = val;
+  localStorage.setItem('gemini_key', val);
+  document.getElementById('gemini-key-input').value = '';
+  document.getElementById('gemini-key-input').placeholder = 'Key 已儲存 ✓';
+  document.getElementById('gemini-key-status').textContent = '✓ 已儲存，AI 摘要功能已啟用';
+  document.getElementById('gemini-key-status').style.color = 'var(--success)';
+}
+
+function clearGeminiKey() {
+  GEMINI_KEY = '';
+  localStorage.removeItem('gemini_key');
+  document.getElementById('gemini-key-input').value = '';
+  document.getElementById('gemini-key-input').placeholder = '貼上你的 Gemini API Key…';
+  document.getElementById('gemini-key-status').textContent = 'Key 已清除';
+  document.getElementById('gemini-key-status').style.color = 'var(--gray-500)';
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  // 讀取已儲存的 Key
+  const saved = localStorage.getItem('gemini_key');
+  if (saved) {
+    GEMINI_KEY = saved;
+    document.getElementById('gemini-key-input').placeholder = 'Key 已儲存 ✓';
+    document.getElementById('gemini-key-status').textContent = '✓ Key 已載入，AI 摘要功能已啟用';
+    document.getElementById('gemini-key-status').style.color = 'var(--success)';
+  }
+  loadNews();
+});
 </script>
 </body>
 </html>
