@@ -527,16 +527,18 @@ async function generateSummary(idx) {
   box.style.display = 'block';
   box.innerHTML = '<div style="color:var(--gray-500);font-size:12px;padding:8px 0">AI 分析中，請稍候…</div>';
 
-  const prompt = `請根據以下新聞資訊，用繁體中文寫出 180-220 字的重點摘要，說明事件背景、影響與產業意義，內容要具體充實。
+  const prompt = `你是一位專業的零售產業分析師，擁有豐富的台灣與全球零售市場知識。請根據以下新聞標題與摘要，結合你的產業知識，用繁體中文撰寫一篇 200 字的深度分析。
 
-標題：${title}
-摘要片段：${desc}
+新聞標題：${title}
+摘要：${desc}
 來源：${source}
 
-要求：
-1. 直接說重點，不要說「本文」「這則新聞」
-2. 包含事件的商業影響或產業意義
-3. 語氣客觀專業`;
+撰寫規則：
+1. 第一段（約 80 字）：說明事件核心——發生什麼事、涉及哪些品牌或市場
+2. 第二段（約 120 字）：深入分析產業影響——為什麼重要、對台灣或全球零售市場的意義、可能帶來的趨勢或挑戰
+3. 若摘要資訊不足，請主動結合產業背景知識合理補充，確保內容具體有深度
+4. 不用「本文」「這則新聞」開頭，語氣客觀專業
+5. 總字數必須達到 200 字`;
 
   try {
     // 最多重試 3 次，遇到 429 等待後重試
@@ -549,7 +551,7 @@ async function generateSummary(idx) {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             contents: [{ parts: [{ text: prompt }] }],
-            generationConfig: { maxOutputTokens: 600, temperature: 0.6 }
+            generationConfig: { maxOutputTokens: 800, temperature: 0.6 }
           })
         }
       );
@@ -593,6 +595,7 @@ function cardButtons(item, idx) {
     'data-title="' + escAttr(item.title) + '" ' +
     'data-desc="' + escAttr(item.desc) + '" ' +
     'data-source="' + escAttr(item.source) + '" ' +
+    'data-link="' + escAttr(item.link) + '" ' +
     'style="padding:4px 10px;background:var(--red);color:#fff;font-size:10px;font-weight:700;' +
     'letter-spacing:.06em;border:none;cursor:pointer;white-space:nowrap">✨ AI 摘要</button>' +
     '</div>' +
