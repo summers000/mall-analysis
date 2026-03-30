@@ -553,7 +553,7 @@ async function generateSummary(idx) {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             contents: [{ parts: [{ text: prompt }] }],
-            generationConfig: { maxOutputTokens: 1024, temperature: 0.6 }
+            generationConfig: { maxOutputTokens: 8192, temperature: 0.6 }
           })
         }
       );
