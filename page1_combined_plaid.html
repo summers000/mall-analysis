@@ -344,7 +344,17 @@
   /* 3-col rows */
   .news-row3 { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin-bottom: 12px; align-items: start; }
   .news-card { background: var(--white); border: 1px solid var(--gray-300); display: flex; flex-direction: column; transition: border-color .2s; overflow: visible !important; height: auto !important; }
-  @media (max-width: 700px) { .news-row3 { grid-template-columns: 1fr; } .news-hero-card { grid-template-columns: 1fr; } }
+  /* 頭條卡片 */
+  .headline-card { background: var(--white); border: 1px solid var(--gray-300); display: flex; flex-direction: column; cursor: pointer; transition: border-color .15s, box-shadow .15s; }
+  .headline-card:hover { border-color: var(--red); box-shadow: 0 2px 12px rgba(255,61,46,.12); }
+  .headline-card-num { font-size:10px;font-weight:800;font-family:var(--font-mono);color:var(--white);background:var(--red);padding:2px 7px;display:inline-block;margin-bottom:8px; }
+  .headline-card-cat { font-size:9px;font-weight:700;color:var(--red);text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px; }
+  .headline-card-title { font-size:13px;font-weight:800;color:var(--black);line-height:1.4;flex:1; }
+  .headline-card-footer { font-size:10px;color:var(--gray-500);margin-top:8px;padding-top:6px;border-top:1px solid var(--gray-100); }
+  .headline-card-body { padding:12px;display:flex;flex-direction:column;flex:1; }
+  @media (max-width: 900px) { #headline-grid { grid-template-columns: repeat(3,1fr) !important; } }
+  @media (max-width: 600px) { #headline-grid { grid-template-columns: 1fr !important; } }
+    @media (max-width: 700px) { .news-row3 { grid-template-columns: 1fr; } .news-hero-card { grid-template-columns: 1fr; } }
 
   /* Small card */
   .news-card:hover { border-color: var(--red); }
@@ -439,6 +449,21 @@
     <span id="gemini-key-status" style="font-size:11px;color:var(--gray-500)"></span>
   </div>
   <div id="news-status"></div>
+  <!-- 頭條區 -->
+  <div id="headline-section" style="display:none">
+    <div style="padding:16px 32px 8px;display:flex;align-items:center;gap:12px">
+      <div style="width:4px;height:22px;background:var(--red);flex-shrink:0"></div>
+      <div style="font-size:14px;font-weight:800;letter-spacing:.06em;text-transform:uppercase">本週焦點頭條</div>
+      <div id="headline-badge" style="font-size:10px;background:var(--red);color:#fff;padding:2px 8px;font-weight:700;letter-spacing:.06em">AI 精選</div>
+    </div>
+    <div id="headline-grid" style="padding:0 32px 16px;display:grid;grid-template-columns:repeat(5,1fr);gap:10px"></div>
+    <div style="margin:0 32px 16px;border-bottom:2px solid var(--gray-100)"></div>
+  </div>
+  <!-- 一般新聞 -->
+  <div id="news-section-label" style="display:none;padding:12px 32px 8px;display:flex;align-items:center;gap:12px">
+    <div style="width:4px;height:22px;background:var(--black);flex-shrink:0"></div>
+    <div style="font-size:14px;font-weight:800;letter-spacing:.06em;text-transform:uppercase">所有新聞</div>
+  </div>
   <div id="news-grid" style="padding:0 32px 32px">
     <div class="empty-state">載入中，請稍候…</div>
   </div>
@@ -477,8 +502,46 @@ async function loadNews() {
       category: CARD_CATS[i % CARD_CATS.length]
     }));
 
-    renderCards(normalized);
-    statusEl.textContent = '' + normalized.length + ' 則（由新到舊）· Google News · ' + new Date().toLocaleString('zh-TW');
+    // ── 來源權重排序 ──
+    const SOURCE_WEIGHT = {
+      // 高權重：產業專業媒體（3分）
+      '經濟日報': 3, '工商時報': 3, '遠見雜誌': 3, '今周刊': 3,
+      '未來流通研究所': 3, '數位時代': 3, '經理人': 3, '食力 foodNEXT': 3,
+      'managertoday.com.tw': 3,
+      // 中權重：主流財經/新聞媒體（2分）
+      '聯合新聞網': 2, '中時新聞網': 2, '風傳媒': 2, '商業周刊': 2,
+      '天下雜誌': 2, '信報網站': 2, 'ETtoday': 2, '自由財經': 2,
+      'TNL The News Lens 關鍵評論網': 2, 'Yahoo財經': 2, 'Yahoo 財經': 2,
+      'news.cnyes.com': 2, 'Vogue Taiwan': 2, 'GQ Taiwan': 2,
+      // 低權重：一般新聞（1分，預設）
+    };
+    function getWeight(source) {
+      for (const [key, w] of Object.entries(SOURCE_WEIGHT)) {
+        if (source && source.includes(key)) return w;
+      }
+      return 1;
+    }
+    // 時間衰減（7天內線性衰減）
+    const nowMs = Date.now();
+    function getTimeFactor(pubDate) {
+      const m = pubDate && pubDate.match(/(\d{4})\/(\d+)\/(\d+)/);
+      if (!m) return 0.5;
+      const ageDays = (nowMs - new Date(+m[1], +m[2]-1, +m[3]).getTime()) / 86400000;
+      return Math.max(0.1, 1 - ageDays / 7);
+    }
+    // 綜合分數 = 來源權重 × 時間衰減
+    const scored = normalized
+      .map(item => ({ ...item, _score: getWeight(item.source) * getTimeFactor(item.pubDate) }))
+      .sort((a, b) => b._score - a._score);
+
+    // 有 Gemini Key → AI 挑頭條；否則取最高分前 5 則
+    if (GEMINI_KEY) {
+      await pickHeadlines(scored);
+    } else {
+      renderHeadlines(scored.slice(0, 5), false);
+      renderCards(scored.slice(5));
+    }
+    statusEl.textContent = `共 ${scored.length} 則（來源權重排序）· Google News · ${new Date().toLocaleString('zh-TW')}`;
   } catch(err) {
     console.error(err);
     document.getElementById('news-grid').innerHTML =
@@ -593,6 +656,79 @@ async function generateSummary(idx) {
     btn.textContent = '✨ AI 摘要';
     btn.disabled = false;
   }
+}
+
+// ════════════════════════════════════
+// 頭條選取（Gemini AI）
+// ════════════════════════════════════
+async function pickHeadlines(allItems) {
+  // 先用前 5 則當預設顯示，等 Gemini 回應再更新
+  renderHeadlines(allItems.slice(0, 5), false);
+  renderCards(allItems.slice(5));
+
+  try {
+    const titles = allItems.map((a, i) => (i + 1) + '. ' + a.title).join('\n');
+    const prompt = `以下是今日零售產業新聞清單，請從中選出最值得關注的 5 則頭條新聞（以重要性、影響力、話題性為標準）。只回傳 5 個編號，用逗號分隔，例如：3,7,12,25,41
+
+新聞清單：
+${titles}
+
+只回傳數字，不要任何解釋。`;
+
+    const resp = await fetch(
+      'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' + GEMINI_KEY,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: { maxOutputTokens: 32, temperature: 0.3 }
+        })
+      }
+    );
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    const data = await resp.json();
+    const raw = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    const indices = raw.match(/\d+/g);
+    if (!indices || indices.length < 3) throw new Error('回傳格式異常');
+
+    // 取 Gemini 選出的編號（1-based → 0-based）
+    const picked = indices.slice(0, 5).map(n => parseInt(n) - 1).filter(i => i >= 0 && i < allItems.length);
+    const headlines = picked.map(i => allItems[i]);
+    const rest = allItems.filter((_, i) => !picked.includes(i));
+
+    renderHeadlines(headlines, true);
+    renderCards(rest);
+    document.getElementById('headline-badge').textContent = 'AI 精選';
+  } catch(e) {
+    console.warn('AI 頭條選取失敗，使用最新前 5 則:', e.message);
+    // 失敗就保持預設的前 5 則
+  }
+}
+
+function renderHeadlines(items, isAI) {
+  const sec   = document.getElementById('headline-section');
+  const grid  = document.getElementById('headline-grid');
+  const label = document.getElementById('news-section-label');
+  if (!items.length) return;
+
+  sec.style.display   = '';
+  label.style.display = 'flex';
+  if (!isAI) document.getElementById('headline-badge').textContent = '最新';
+
+  const nums = ['①','②','③','④','⑤'];
+  var html = '';
+  items.forEach(function(item, i) {
+    html += '<a href="' + escAttr(item.link) + '" target="_blank" rel="noopener" style="text-decoration:none;color:inherit;display:flex;flex-direction:column">' +
+      '<div class="headline-card">' +
+      '<div class="headline-card-body">' +
+      '<div class="headline-card-num">' + (nums[i]||i+1) + '</div>' +
+      '<div class="headline-card-cat">' + escT(item.category) + '</div>' +
+      '<div class="headline-card-title">' + escT(item.title) + '</div>' +
+      '<div class="headline-card-footer">' + escT(item.source||'') + (item.pubDate ? ' · ' + escT(item.pubDate) : '') + '</div>' +
+      '</div></div></a>';
+  });
+  grid.innerHTML = html;
 }
 
 // ════════════════════════════════════
