@@ -345,6 +345,10 @@
   .news-row3 { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin-bottom: 12px; align-items: start; }
   .news-card { background: var(--white); border: 1px solid var(--gray-300); display: flex; flex-direction: column; transition: border-color .2s; overflow: visible !important; height: auto !important; }
   /* 頭條卡片 */
+  /* 頭條 grid：左大右四小 */
+  #headline-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  #headline-main { }  /* 左側大卡 */
+  #headline-sub  { display:grid; grid-template-rows:repeat(2,1fr); grid-template-columns:repeat(2,1fr); gap:10px; }
   .headline-card { background: var(--white); border: 1px solid var(--gray-300); display: flex; flex-direction: column; cursor: pointer; transition: border-color .15s, box-shadow .15s; }
   .headline-card:hover { border-color: var(--red); box-shadow: 0 2px 12px rgba(255,61,46,.12); }
   .headline-card-num { font-size:10px;font-weight:800;font-family:var(--font-mono);color:var(--white);background:var(--red);padding:2px 7px;display:inline-block;margin-bottom:8px; }
@@ -432,8 +436,8 @@
 <section class="news-section">
   <div style="background:var(--black);padding:14px 32px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
     <div>
-      <div style="font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--red);margin-bottom:3px">Weekly Intelligence</div>
-      <div style="font-size:22px;font-weight:800;color:var(--white);letter-spacing:-.01em">本週全球零售新聞</div>
+      <div style="font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--red);margin-bottom:3px">Daily Intelligence</div>
+      <div style="font-size:22px;font-weight:800;color:var(--white);letter-spacing:-.01em">每日全球零售新聞</div>
     </div>
     <div style="display:flex;gap:8px;align-items:center">
       <button onclick="loadNews()" style="padding:8px 18px;background:var(--red);color:#fff;border:none;font-size:12px;font-weight:700;letter-spacing:.06em;cursor:pointer;text-transform:uppercase">🔄 重新整理</button>
@@ -453,10 +457,13 @@
   <div id="headline-section" style="display:none">
     <div style="padding:16px 32px 8px;display:flex;align-items:center;gap:12px">
       <div style="width:4px;height:22px;background:var(--red);flex-shrink:0"></div>
-      <div style="font-size:14px;font-weight:800;letter-spacing:.06em;text-transform:uppercase">本週焦點頭條</div>
+      <div style="font-size:14px;font-weight:800;letter-spacing:.06em;text-transform:uppercase">本日焦點頭條</div>
       <div id="headline-badge" style="font-size:10px;background:var(--red);color:#fff;padding:2px 8px;font-weight:700;letter-spacing:.06em">AI 精選</div>
     </div>
-    <div id="headline-grid" style="padding:0 32px 16px;display:grid;grid-template-columns:repeat(5,1fr);gap:10px"></div>
+    <div style="padding:0 32px 16px;display:grid;grid-template-columns:1fr 1fr;gap:12px" id="headline-grid-wrap">
+      <div id="headline-main"></div>
+      <div id="headline-sub" style="display:grid;grid-template-rows:repeat(2,1fr);grid-template-columns:repeat(2,1fr);gap:10px"></div>
+    </div>
     <div style="margin:0 32px 16px;border-bottom:2px solid var(--gray-100)"></div>
   </div>
   <!-- 一般新聞 -->
@@ -560,102 +567,23 @@ async function loadNews() {
 // Gemini AI 摘要（單則）
 // ════════════════════════════════════
 async function generateSummary(idx) {
-  const btn  = document.getElementById('ai-btn-' + idx);
-  const box  = document.getElementById('ai-box-' + idx);
-  const title = btn.dataset.title;
-  const desc  = btn.dataset.desc;
+  const btn = document.getElementById('ai-btn-' + idx);
+  const title  = btn.dataset.title;
+  const desc   = btn.dataset.desc;
   const source = btn.dataset.source;
+  const link   = btn.dataset.link;
+  openAnalysisPage({ title, desc, source, link });
+}
 
-  // 已展開 → 收起
-  if (box.style.display === 'block') {
-    box.style.display = 'none';
-    btn.textContent = '✨ AI 摘要';
-    return;
-  }
-
-  // 已有內容 → 直接展開
-  if (box.dataset.done === '1') {
-    box.style.display = 'block';
-    btn.textContent = '✕ 收起';
-    return;
-  }
-
-  // 檢查是否有 Key
+// 開啟產業分析頁面（新分頁）
+function openAnalysisPage(item) {
   if (!GEMINI_KEY) {
     alert('請先在上方輸入並儲存 Gemini API Key');
     return;
   }
-  btn.textContent = '⏳ 生成中…';
-  btn.disabled = true;
-  box.style.display = 'block';
-  box.innerHTML = '<div style="color:var(--gray-500);font-size:12px;padding:8px 0">AI 分析中，請稍候…</div>';
-
-  const prompt = `你是零售產業分析師。請用繁體中文，根據以下新聞，寫出剛好 200 字的分析摘要（請數字數，必須達到 200 字）。
-
-標題：${title}
-摘要：${desc}
-來源：${source}
-
-格式：
-【事件】（第一段，80字）說明核心事件、涉及品牌或市場。
-【分析】（第二段，120字）說明為何重要、對零售產業的影響與趨勢。
-
-規定：
-- 資訊不足時請依產業背景知識補充，確保內容具體
-- 不以「本文」「這則新聞」開頭
-- 合計恰好 200 字，不得少於 195 字`;
-
-  try {
-    // 最多重試 3 次，遇到 429 等待後重試
-    let resp, retries = 0;
-    while (retries <= 3) {
-      resp = await fetch(
-        'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' + GEMINI_KEY,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: prompt }] }],
-            generationConfig: { maxOutputTokens: 8192, temperature: 0.6 }
-          })
-        }
-      );
-      if (resp.status === 429 && retries < 3) {
-        retries++;
-        box.innerHTML = '<div style="color:var(--gray-500);font-size:12px;padding:8px 0">請求過於頻繁，' + (4 - retries) * 5 + ' 秒後重試（' + retries + '/3）…</div>';
-        await new Promise(r => setTimeout(r, 5000));
-        continue;
-      }
-      break;
-    }
-    if (!resp.ok) throw new Error('HTTP ' + resp.status);
-    const data = await resp.json();
-    const candidate    = data.candidates?.[0];
-    const text         = candidate?.content?.parts?.[0]?.text || '';
-    const finishReason = candidate?.finishReason || 'UNKNOWN';
-    const tokenCount   = data.usageMetadata?.candidatesTokenCount || 0;
-
-    // Debug：開 F12 Console 可看到截斷原因
-    console.log('[Gemini]', { finishReason, tokenCount, textLen: text.length });
-
-    if (!text) throw new Error('AI 未回傳內容（finishReason: ' + finishReason + '）');
-    if (finishReason === 'SAFETY') throw new Error('內容被安全過濾器攔截，請換一則新聞試試');
-
-    const wordCount = text.replace(/\s/g,'').length;
-    box.innerHTML =
-      '<div style="border-left:3px solid var(--red);padding:8px 12px;background:#fff8f8">' +
-      '<div style="font-size:10px;font-weight:700;letter-spacing:.08em;color:var(--red);margin-bottom:6px">' +
-      '✨ AI 摘要 <span style="font-weight:400;color:var(--gray-500);margin-left:8px">' + wordCount + ' 字 · ' + finishReason + '</span></div>' +
-      '<div style="font-size:13px;line-height:1.8;color:var(--black)">' + escT(text).replace(/\n/g,'<br>') + '</div>' +
-      '</div>';
-    box.dataset.done = '1';
-    btn.textContent = '✕ 收起';
-    btn.disabled = false;
-  } catch(err) {
-    box.innerHTML = '<div style="color:var(--red);font-size:12px;padding:8px 0">生成失敗：' + escT(err.message) + '</div>';
-    btn.textContent = '✨ AI 摘要';
-    btn.disabled = false;
-  }
+  // 把資料存到 sessionStorage，再開分析頁
+  sessionStorage.setItem('analysis_item', JSON.stringify(item));
+  window.open('page1_analysis.html', '_blank');
 }
 
 // ════════════════════════════════════
@@ -708,7 +636,8 @@ ${titles}
 
 function renderHeadlines(items, isAI) {
   const sec   = document.getElementById('headline-section');
-  const grid  = document.getElementById('headline-grid');
+  const mainEl = document.getElementById('headline-main');
+  const subEl  = document.getElementById('headline-sub');
   const label = document.getElementById('news-section-label');
   if (!items.length) return;
 
@@ -717,18 +646,56 @@ function renderHeadlines(items, isAI) {
   if (!isAI) document.getElementById('headline-badge').textContent = '最新';
 
   const nums = ['①','②','③','④','⑤'];
-  var html = '';
-  items.forEach(function(item, i) {
-    html += '<a href="' + escAttr(item.link) + '" target="_blank" rel="noopener" style="text-decoration:none;color:inherit;display:flex;flex-direction:column">' +
+
+  // 第一則：左側大卡
+  var hero = items[0];
+  mainEl.innerHTML =
+    '<div class="headline-card" style="height:100%;min-height:180px">' +
+    '<div class="headline-card-body" style="height:100%">' +
+    '<div class="headline-card-num">①</div>' +
+    '<div class="headline-card-cat">' + escT(hero.category) + '</div>' +
+    '<div class="headline-card-title" style="font-size:17px">' + escT(hero.title) + '</div>' +
+    '<div class="headline-card-footer">' + escT(hero.source||'') + (hero.pubDate ? ' · ' + escT(hero.pubDate) : '') + '</div>' +
+    '<div style="display:flex;gap:5px;margin-top:10px;flex-wrap:wrap">' +
+    '<a href="' + escAttr(hero.link) + '" target="_blank" rel="noopener" style="padding:4px 10px;background:var(--black);color:#fff;font-size:10px;font-weight:700;letter-spacing:.06em;text-decoration:none">🔗 原始新聞</a>' +
+    '<button id="ai-btn-h0" onclick="generateSummaryH(0)" ' +
+    'data-title="' + escAttr(hero.title) + '" data-desc="' + escAttr(hero.desc||'') + '" data-source="' + escAttr(hero.source||'') + '" data-link="' + escAttr(hero.link||'') + '" ' +
+    'style="padding:4px 10px;background:var(--red);color:#fff;font-size:10px;font-weight:700;letter-spacing:.06em;border:none;cursor:pointer">✨ AI 摘要</button>' +
+    '</div>' +
+    '<div id="ai-box-h0" style="display:none;margin-top:8px"></div>' +
+    '</div></div>';
+
+  // 其餘四則：右側 2x2
+  var subHtml = '';
+  items.slice(1,5).forEach(function(item, i) {
+    var idx = i + 1;
+    subHtml +=
       '<div class="headline-card">' +
       '<div class="headline-card-body">' +
-      '<div class="headline-card-num">' + (nums[i]||i+1) + '</div>' +
+      '<div class="headline-card-num">' + (nums[idx]||idx+1) + '</div>' +
       '<div class="headline-card-cat">' + escT(item.category) + '</div>' +
       '<div class="headline-card-title">' + escT(item.title) + '</div>' +
       '<div class="headline-card-footer">' + escT(item.source||'') + (item.pubDate ? ' · ' + escT(item.pubDate) : '') + '</div>' +
-      '</div></div></a>';
+      '<div style="display:flex;gap:5px;margin-top:8px;flex-wrap:wrap">' +
+      '<a href="' + escAttr(item.link) + '" target="_blank" rel="noopener" style="padding:3px 9px;background:var(--black);color:#fff;font-size:10px;font-weight:700;letter-spacing:.06em;text-decoration:none">🔗 原始新聞</a>' +
+      '<button id="ai-btn-h' + idx + '" onclick="generateSummaryH(' + idx + ')" ' +
+      'data-title="' + escAttr(item.title) + '" data-desc="' + escAttr(item.desc||'') + '" data-source="' + escAttr(item.source||'') + '" data-link="' + escAttr(item.link||'') + '" ' +
+      'style="padding:3px 9px;background:var(--red);color:#fff;font-size:10px;font-weight:700;letter-spacing:.06em;border:none;cursor:pointer">✨ AI 摘要</button>' +
+      '</div>' +
+      '<div id="ai-box-h' + idx + '" style="display:none;margin-top:6px"></div>' +
+      '</div></div>';
   });
-  grid.innerHTML = html;
+  subEl.innerHTML = subHtml;
+}
+
+// AI 摘要（頭條卡片專用）— 開新分析頁面
+function generateSummaryH(idx) {
+  const btn = document.getElementById('ai-btn-h' + idx);
+  const title  = btn.dataset.title;
+  const desc   = btn.dataset.desc;
+  const source = btn.dataset.source;
+  const link   = btn.dataset.link;
+  openAnalysisPage({ title, desc, source, link });
 }
 
 // ════════════════════════════════════
@@ -761,38 +728,23 @@ function renderCards(items) {
   const grid = document.getElementById('news-grid');
   if (!items.length) { grid.innerHTML = '<div class="empty-state">找不到相關新聞</div>'; return; }
 
-  const hero = items[0];
-
-  // 第一則：大橫幅
-  var html = '<div class="news-hero-card" style="margin-bottom:12px">' +
-    '<div class="news-hero-body">' +
-    '<span class="news-hero-rank">#1</span>' +
-    '<div class="news-hero-cat">' + escT(hero.category) + '</div>' +
-    '<div class="news-hero-title">' + escT(hero.title) + '</div>' +
-
-    cardFooter(hero) +
-    cardButtons(hero, 0) +
-    '</div></div>';
-
-  // 其餘：每排 3 則
-  var rest = items.slice(1);
-  for (var rs = 0; rs < rest.length; rs += 3) {
+  // 統一三欄，不再有第一則獨立大橫幅
+  var html = '';
+  for (var rs = 0; rs < items.length; rs += 3) {
     html += '<div class="news-row3">';
-    rest.slice(rs, rs + 3).forEach(function(item, ri) {
-      var i = rs + ri + 1;
+    items.slice(rs, rs + 3).forEach(function(item, ri) {
+      var i = rs + ri;
       html += '<div class="news-card">' +
         '<div class="news-card-body">' +
         '<div class="news-card-rank">#' + (i + 1) + '</div>' +
         '<div class="news-card-cat">' + escT(item.category) + '</div>' +
         '<div class="news-card-title">' + escT(item.title) + '</div>' +
-
         cardFooter(item) +
         cardButtons(item, i) +
         '</div></div>';
     });
     html += '</div>';
   }
-
   grid.innerHTML = html;
 }
 
