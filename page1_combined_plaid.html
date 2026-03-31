@@ -743,7 +743,7 @@ function renderHeadlines(items, isAI) {
       '<button id="ai-btn-h' + i + '" onclick="generateSummaryH(' + i + ')" ' +
       'data-title="' + escAttr(item.title) + '" data-desc="' + escAttr(item.desc||'') + '" ' +
       'data-source="' + escAttr(item.source||'') + '" data-link="' + escAttr(item.link||'') + '" ' +
-      'style="padding:2px 8px;background:var(--red);color:#fff;font-size:10px;font-weight:700;letter-spacing:.06em;border:none;cursor:pointer;white-space:nowrap">✨ AI 摘要</button>' +
+      'style="padding:2px 8px;background:#984807;color:#fff;font-size:10px;font-weight:700;letter-spacing:.06em;border:none;cursor:pointer;white-space:nowrap">✨ AI 摘要</button>' +
       '</div>' +
       '</div></div>';
   });
@@ -764,26 +764,25 @@ function generateSummaryH(idx) {
 // 渲染卡片
 // ════════════════════════════════════
 function cardButtons(item, idx) {
-  return '<div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">' +
+  return '<div style="display:flex;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap">' +
+    '<span style="font-size:11px;color:var(--gray-500);flex-shrink:0">' +
+    escT(item.source || '') + (item.pubDate ? '&nbsp;·&nbsp;' + escT(item.pubDate) : '') +
+    '</span>' +
     '<a href="' + escAttr(item.link) + '" target="_blank" rel="noopener" ' +
-    'style="padding:4px 10px;background:var(--black);color:#fff;font-size:10px;font-weight:700;' +
+    'style="padding:2px 8px;background:var(--black);color:#fff;font-size:10px;font-weight:700;' +
     'letter-spacing:.06em;text-decoration:none;white-space:nowrap">🔗 原始新聞</a>' +
     '<button id="ai-btn-' + idx + '" onclick="generateSummary(' + idx + ')" ' +
     'data-title="' + escAttr(item.title) + '" ' +
     'data-desc="' + escAttr(item.desc) + '" ' +
     'data-source="' + escAttr(item.source) + '" ' +
     'data-link="' + escAttr(item.link) + '" ' +
-    'style="padding:4px 10px;background:var(--red);color:#fff;font-size:10px;font-weight:700;' +
+    'style="padding:2px 8px;background:#984807;color:#fff;font-size:10px;font-weight:700;' +
     'letter-spacing:.06em;border:none;cursor:pointer;white-space:nowrap">✨ AI 摘要</button>' +
-    '</div>' +
-    '<div id="ai-box-' + idx + '" style="display:none;margin-top:8px"></div>';
+    '</div>';
 }
 
 function cardFooter(item) {
-  return '<div class="news-card-footer">' +
-    '<span style="font-size:11px;color:var(--gray-500)">' +
-    escT(item.source || '') + (item.pubDate ? '&nbsp;·&nbsp;' + escT(item.pubDate) : '') +
-    '</span></div>';
+  return '';  // footer 合併到 cardButtons
 }
 
 function renderCards(items) {
