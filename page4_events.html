@@ -356,9 +356,6 @@
   .headline-meta { font-size:11px; color:var(--gray-500); margin-bottom:6px; }
   .headline-btns { display:flex; gap:6px; flex-wrap:wrap; }
     @media (max-width: 700px) { .news-row3 { grid-template-columns: 1fr; } .news-hero-card { grid-template-columns: 1fr; } }
-  .topic-tab { padding:10px 18px; font-size:11px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; background:transparent; border:none; border-bottom:3px solid transparent; cursor:pointer; color:var(--gray-500); font-family:var(--font-display); transition:color .15s,border-color .15s; margin-bottom:-2px; }
-  .topic-tab:hover { color:var(--black); }
-  .topic-tab.active { color:var(--black); border-bottom-color:var(--red); }
 
   /* Small card */
   .news-card:hover { border-color: var(--red); }
@@ -441,26 +438,14 @@
     </div>
     <div style="display:flex;gap:8px;align-items:center">
       <button onclick="loadNews()" style="padding:8px 18px;background:var(--red);color:#fff;border:none;font-size:12px;font-weight:700;letter-spacing:.06em;cursor:pointer;text-transform:uppercase">🔄 重新整理</button>
-      <button onclick="openGoogleNews()" style="padding:8px 16px;background:transparent;border:1px solid var(--gray-300);color:var(--gray-500);font-size:12px;cursor:pointer">🔗 Google 新聞</button>
     </div>
   </div>
   
 
   <div id="news-status"></div>
   <!-- 一般新聞 -->
-  <!-- 議題 Tab -->
-  <div style="padding:12px 32px 0;display:flex;gap:0;border-bottom:2px solid var(--gray-100)">
-    <button class="topic-tab active" onclick="switchTopic('all')"    data-topic="all">全部</button>
-    <button class="topic-tab"        onclick="switchTopic('retail')" data-topic="retail">零售</button>
-    <button class="topic-tab"        onclick="switchTopic('ai')"     data-topic="ai">AI</button>
-    <button class="topic-tab"        onclick="switchTopic('security')" data-topic="security">資安</button>
-    <button class="topic-tab"        onclick="switchTopic('digital')" data-topic="digital">數位轉型</button>
-    <button class="topic-tab"        onclick="switchTopic('data')"   data-topic="data">數據</button>
-  </div>
-  <div id="news-section-label" style="display:none;padding:12px 32px 8px;display:flex;align-items:center;gap:12px">
-    <div style="width:4px;height:22px;background:var(--black);flex-shrink:0"></div>
-    <div style="font-size:14px;font-weight:800;letter-spacing:.06em;text-transform:uppercase">所有新聞</div>
-  </div>
+
+
   <div id="news-grid" style="padding:0 32px 32px">
     <div class="empty-state">載入中，請稍候…</div>
   </div>
@@ -486,14 +471,6 @@ const TOPICS = {
 const TOPIC_LABELS = {
   all:'全部', retail:'零售', ai:'AI', security:'資安', digital:'數位轉型', data:'數據'
 };
-
-function switchTopic(topic) {
-  currentTopic = topic;
-  document.querySelectorAll('.topic-tab').forEach(t => {
-    t.classList.toggle('active', t.dataset.topic === topic);
-  });
-  loadNews();
-}
 
 async function loadNews() {
   const statusEl = document.getElementById('news-status');
@@ -527,29 +504,11 @@ async function loadNews() {
       }
     } catch(e) { console.warn('Google News 載入失敗:', e.message); }
 
-    // ── Step 3：依議題篩選 iThome 活動 ──
-    const filtered = currentTopic === 'all'
-      ? ithomeEvents
-      : ithomeEvents.filter(ev => {
-          const t = (ev.topic || '').toLowerCase();
-          const n = (ev.name || '').toLowerCase();
-          const map = {
-            retail:   ['零售','百貨','電商','購物'],
-            ai:       ['ai','人工智慧','機器學習','生成式'],
-            security: ['資安','資訊安全','網路安全'],
-            digital:  ['數位轉型','數位化','智慧'],
-            data:     ['數據','資料','data','大數據'],
-          };
-          const keywords = map[currentTopic] || [];
-          return keywords.some(k => t.includes(k) || n.includes(k.toLowerCase()));
-        });
-
-    // ── Step 4：顯示結果 ──
-    if (filtered.length > 0) {
-      // 有 iThome 結構化活動 → 直接顯示
-      renderEventCards(filtered);
+    // ── Step 3：顯示結果 ──
+    if (ithomeEvents.length > 0) {
+      renderEventCards(ithomeEvents);
       const suffix = newsEvents.length ? '，另有 ' + newsEvents.length + ' 則相關新聞' : '';
-      statusEl.textContent = '共 ' + filtered.length + ' 場活動（iThome）' + suffix + ' · ' + new Date().toLocaleString('zh-TW');
+      statusEl.textContent = '共 ' + ithomeEvents.length + ' 場活動（iThome）' + suffix + ' · ' + new Date().toLocaleString('zh-TW');
 
     } else if (newsEvents.length > 0 && GEMINI_KEY) {
       // 沒有 iThome 活動 + 有 Gemini Key → AI 萃取新聞
