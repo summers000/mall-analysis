@@ -508,26 +508,68 @@ async function loadNews() {
   statusEl.textContent = '載入中…';
   gridEl.innerHTML = '<div class="empty-state" style="padding:60px 20px"><div style="font-size:28px;margin-bottom:12px">📡</div><div>載入活動資訊中…</div></div>';
 
-  const q = TOPICS[currentTopic] || TOPICS.all;
-
   try {
-    // Step 1：從 GAS 抓 Google News RSS
-    const resp = await fetch(GAS_URL + '?q=' + encodeURIComponent(q) + '&n=20');
-    if (!resp.ok) throw new Error('GAS HTTP ' + resp.status);
-    const data = await resp.json();
-    if (data.status === 'error') throw new Error(data.message);
-    if (!data.news || !data.news.length) throw new Error('找不到相關活動新聞');
+    // ── Step 1：優先抓 iThome 結構化活動（有日期、地點）──
+    let ithomeEvents = [];
+    try {
+      const iresp = await fetch(GAS_URL + '?action=events');
+      if (iresp.ok) {
+        const idata = await iresp.json();
+        if (idata.status === 'ok' && idata.events && idata.events.length) {
+          ithomeEvents = idata.events;
+        }
+      }
+    } catch(e) { console.warn('iThome 載入失敗:', e.message); }
 
-    const rawNews = data.news;
+    // ── Step 2：抓 Google News RSS 補充（依目前議題）──
+    const q = TOPICS[currentTopic] || TOPICS.all;
+    let newsEvents = [];
+    try {
+      const nresp = await fetch(GAS_URL + '?q=' + encodeURIComponent(q) + '&n=20');
+      if (nresp.ok) {
+        const ndata = await nresp.json();
+        if (ndata.status === 'ok' && ndata.news && ndata.news.length) {
+          newsEvents = ndata.news;
+        }
+      }
+    } catch(e) { console.warn('Google News 載入失敗:', e.message); }
 
-    // Step 2：如果有 Gemini Key，用 AI 萃取結構化活動資料
-    if (GEMINI_KEY) {
-      gridEl.innerHTML = '<div class="empty-state" style="padding:60px 20px"><div style="font-size:28px;margin-bottom:12px">✨</div><div>Gemini AI 整理活動資訊中（約 10 秒）…</div></div>';
-      await extractAndRender(rawNews, statusEl, gridEl);
+    // ── Step 3：依議題篩選 iThome 活動 ──
+    const filtered = currentTopic === 'all'
+      ? ithomeEvents
+      : ithomeEvents.filter(ev => {
+          const t = (ev.topic || '').toLowerCase();
+          const n = (ev.name || '').toLowerCase();
+          const map = {
+            retail:   ['零售','百貨','電商','購物'],
+            ai:       ['ai','人工智慧','機器學習','生成式'],
+            security: ['資安','資訊安全','網路安全'],
+            digital:  ['數位轉型','數位化','智慧'],
+            data:     ['數據','資料','data','大數據'],
+          };
+          const keywords = map[currentTopic] || [];
+          return keywords.some(k => t.includes(k) || n.includes(k.toLowerCase()));
+        });
+
+    // ── Step 4：顯示結果 ──
+    if (filtered.length > 0) {
+      // 有 iThome 結構化活動 → 直接顯示
+      renderEventCards(filtered);
+      const suffix = newsEvents.length ? '，另有 ' + newsEvents.length + ' 則相關新聞' : '';
+      statusEl.textContent = '共 ' + filtered.length + ' 場活動（iThome）' + suffix + ' · ' + new Date().toLocaleString('zh-TW');
+
+    } else if (newsEvents.length > 0 && GEMINI_KEY) {
+      // 沒有 iThome 活動 + 有 Gemini Key → AI 萃取新聞
+      gridEl.innerHTML = '<div class="empty-state" style="padding:60px 20px"><div style="font-size:28px;margin-bottom:12px">✨</div><div>Gemini AI 整理活動資訊中…</div></div>';
+      await extractAndRender(newsEvents, statusEl, gridEl);
+
+    } else if (newsEvents.length > 0) {
+      // 只有新聞，沒有 Key → 顯示新聞列表
+      renderNewsCards(newsEvents);
+      statusEl.textContent = '共 ' + newsEvents.length + ' 則相關新聞（設定 Gemini Key 可取得結構化活動資料）· ' + new Date().toLocaleString('zh-TW');
+
     } else {
-      // 沒有 Key：直接顯示新聞列表
-      renderNewsCards(rawNews);
-      statusEl.textContent = '共 ' + rawNews.length + ' 則（未設定 Gemini Key，顯示原始新聞）· ' + new Date().toLocaleString('zh-TW');
+      throw new Error('目前找不到相關活動資料，請稍後再試');
     }
 
   } catch(err) {
