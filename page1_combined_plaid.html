@@ -352,9 +352,8 @@
   .headline-row:last-child { border-bottom:none; }
   .headline-num { font-size:16px; font-weight:800; font-family:var(--font-mono); color:var(--red); min-width:24px; flex-shrink:0; line-height:1.4; }
   .headline-body { flex:1; min-width:0; }
-  .headline-title { font-size:14px; font-weight:700; color:var(--black); line-height:1.45; margin-bottom:4px; }
-  .headline-meta { font-size:11px; color:var(--gray-500); margin-bottom:6px; }
-  .headline-btns { display:flex; gap:6px; flex-wrap:wrap; }
+  .headline-title { font-size:14px; font-weight:700; color:var(--black); line-height:1.45; margin-bottom:6px; }
+  .headline-meta { font-size:11px; color:var(--gray-500); display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
     @media (max-width: 700px) { .news-row3 { grid-template-columns: 1fr; } .news-hero-card { grid-template-columns: 1fr; } }
 
   /* Small card */
@@ -431,143 +430,209 @@
 
 <!-- ① 本週全球零售十大新聞 -->
 <section class="news-section">
-  <div style="background:var(--white);padding:14px 32px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;border-bottom:3px solid var(--red)">
+  <div style="background:var(--black);padding:14px 32px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
     <div>
-      <div style="font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--red);margin-bottom:3px">Event Intelligence</div>
-      <div style="font-size:22px;font-weight:800;color:var(--black);letter-spacing:-.01em">產業活動與研討會</div>
+      <div style="font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--red);margin-bottom:3px">Daily Intelligence</div>
+      <div style="font-size:22px;font-weight:800;color:var(--white);letter-spacing:-.01em">每日全球零售新聞</div>
     </div>
     <div style="display:flex;gap:8px;align-items:center">
       <button onclick="loadNews()" style="padding:8px 18px;background:var(--red);color:#fff;border:none;font-size:12px;font-weight:700;letter-spacing:.06em;cursor:pointer;text-transform:uppercase">🔄 重新整理</button>
+      <button onclick="openGoogleNews()" style="padding:8px 16px;background:transparent;border:1px solid rgba(255,255,255,.3);color:rgba(255,255,255,.7);font-size:12px;cursor:pointer">🔗 Google 新聞</button>
     </div>
   </div>
-  
-
+  <div id="gemini-key-bar" style="padding:8px 32px;background:#f9f9f9;border-bottom:1px solid var(--gray-300);display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+    <span style="font-size:11px;font-weight:700;letter-spacing:.06em;color:var(--gray-500);text-transform:uppercase">Gemini Key</span>
+    <input id="gemini-key-input" type="password" placeholder="貼上你的 Gemini API Key…" autocomplete="off"
+      style="flex:1;min-width:200px;max-width:360px;padding:5px 10px;font-size:12px;border:1px solid var(--gray-300);font-family:var(--font-mono);outline:none">
+    <button onclick="saveGeminiKey()" style="padding:5px 14px;background:var(--black);color:#fff;font-size:11px;font-weight:700;border:none;cursor:pointer;letter-spacing:.06em">儲存</button>
+    <button onclick="clearGeminiKey()" style="padding:5px 14px;background:transparent;border:1px solid var(--gray-300);color:var(--gray-500);font-size:11px;cursor:pointer">清除</button>
+    <span id="gemini-key-status" style="font-size:11px;color:var(--gray-500)"></span>
+  </div>
   <div id="news-status"></div>
+  <!-- 頭條區 -->
+  <div id="headline-section" style="display:none">
+    <div style="padding:16px 32px 8px;display:flex;align-items:center;gap:12px">
+      <div style="width:4px;height:22px;background:var(--red);flex-shrink:0"></div>
+      <div style="font-size:14px;font-weight:800;letter-spacing:.06em;text-transform:uppercase">本日焦點頭條</div>
+    </div>
+    <div id="headline-list" style="padding:0 32px 16px"></div>
+    <div style="margin:0 32px 16px;border-bottom:2px solid var(--gray-100)"></div>
+  </div>
   <!-- 一般新聞 -->
-
-
+  <div id="news-section-label" style="display:none;padding:12px 32px 8px;display:flex;align-items:center;gap:12px">
+    <div style="width:4px;height:22px;background:var(--black);flex-shrink:0"></div>
+    <div style="font-size:14px;font-weight:800;letter-spacing:.06em;text-transform:uppercase">所有新聞</div>
+  </div>
   <div id="news-grid" style="padding:0 32px 32px">
     <div class="empty-state">載入中，請稍候…</div>
   </div>
 </section>
 
-
-
+<!-- 頁內新聞分析區塊（預設隱藏，點 AI 摘要後展開） -->
+<div id="inline-analysis" style="display:none">
+  <!-- Hero：黑底 -->
+  <div style="background:var(--black);display:grid;grid-template-columns:1fr 1fr;min-height:220px;position:relative;overflow:hidden">
+    <div style="position:absolute;top:-40px;right:-40px;width:160px;height:160px;background:var(--red);border-radius:50%;opacity:.85"></div>
+    <div style="padding:32px 40px;display:flex;flex-direction:column;justify-content:space-between;position:relative;z-index:1">
+      <div>
+        <div style="font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--red);margin-bottom:8px">AI Analysis</div>
+        <div style="font-size:clamp(26px,4vw,40px);font-weight:800;color:var(--white);line-height:1.05;letter-spacing:-.02em;margin-bottom:12px">新聞分析</div>
+        <div id="ia-news-title" style="font-size:13px;color:rgba(255,255,255,.6);line-height:1.55;max-width:300px"></div>
+      </div>
+      <div id="ia-news-source" style="font-size:11px;color:rgba(255,255,255,.35);font-family:var(--font-mono);letter-spacing:.04em"></div>
+    </div>
+    <div style="padding:32px 40px 32px 28px;border-left:1px solid rgba(255,255,255,.1);position:relative;z-index:1;display:flex;flex-direction:column">
+      <div style="font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--red);border-left:3px solid var(--red);padding-left:10px;margin-bottom:14px">焦點分析</div>
+      <div id="ia-focus" style="font-size:14px;color:rgba(255,255,255,.85);line-height:1.8;flex:1">
+        <div style="display:flex;gap:10px;align-items:center"><div style="width:20px;height:20px;border:2px solid rgba(255,255,255,.2);border-top-color:var(--red);border-radius:50%;animation:spin .7s linear infinite"></div><span style="color:rgba(255,255,255,.5);font-size:12px">AI 分析中…</span></div>
+      </div>
+      <a id="ia-link" href="#" target="_blank" rel="noopener" style="display:none;margin-top:16px;padding:7px 16px;background:var(--red);color:#fff;font-size:11px;font-weight:700;letter-spacing:.08em;text-decoration:none;text-transform:uppercase;width:fit-content">🔗 閱讀原始新聞</a>
+    </div>
+  </div>
+  <!-- Strategy：紅底 -->
+  <div style="background:var(--red);display:grid;grid-template-columns:200px 1fr;min-height:100px">
+    <div style="padding:28px 32px;border-right:1px solid rgba(255,255,255,.2);display:flex;align-items:center">
+      <div style="font-size:clamp(18px,2.5vw,26px);font-weight:800;color:var(--white);line-height:1.1">Strategy<br>is the<br>key.</div>
+    </div>
+    <div style="padding:28px 36px;display:flex;align-items:center">
+      <div id="ia-strategy" style="font-size:14px;color:rgba(255,255,255,.9);line-height:1.75;font-style:italic">分析生成中…</div>
+    </div>
+  </div>
+  <!-- 指標 bar -->
+  <div style="background:var(--gray-100);border-top:1px solid var(--gray-300);display:grid;grid-template-columns:repeat(3,1fr)">
+    <div style="padding:12px 24px;border-right:1px solid var(--gray-300)"><div style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--gray-500);margin-bottom:3px">狀態</div><div id="ia-status" style="font-size:12px;font-weight:700;font-family:var(--font-mono)">分析中…</div></div>
+    <div style="padding:12px 24px;border-right:1px solid var(--gray-300)"><div style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--gray-500);margin-bottom:3px">來源</div><div id="ia-source-meta" style="font-size:12px;font-weight:700;font-family:var(--font-mono)">—</div></div>
+    <div style="padding:12px 24px"><div style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--gray-500);margin-bottom:3px">範疇</div><div id="ia-scope" style="font-size:12px;font-weight:700;font-family:var(--font-mono)">Global Retail · TW Focus</div></div>
+  </div>
+</div>
 
 <script>
-const GAS_URL   = 'https://script.google.com/macros/s/AKfycbxDpcHq0WApWsUOPrmJ0LTMlr53ZRurrQMRF6TkRpMiGBjGgKAjE_Gy1cLTFK67RDcB/exec';
-let GEMINI_KEY  = localStorage.getItem('gemini_key') || '';
-let currentTopic = 'all';
+const CARD_CATS = ['台灣零售','百貨動態','電商','實體零售','快時尚','品牌動態','投資併購','供應鏈','消費趨勢','購物中心'];
+let GEMINI_KEY = localStorage.getItem('gemini_key') || '';
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbyyxp8hFOYxp2rtdektwOW_FEqDSZMjoz_dXdPB04cLq2x9CqqNiqRRGxOQrJUmYjTb/exec';
 
-const TOPICS = {
-  all:      '研討會 OR 論壇 OR 峰會 OR 高峰會 OR 展覽 OR 年會 OR 大會',
-  retail:   '零售 研討會 OR 零售 論壇 OR 百貨 峰會 OR 電商 論壇',
-  ai:       'AI 論壇 OR 人工智慧 研討會 OR AI 峰會 OR 生成式AI 論壇',
-  security: '資安 研討會 OR 資訊安全 論壇 OR 網路安全 峰會',
-  digital:  '數位轉型 論壇 OR 數位轉型 研討會 OR 智慧零售 論壇',
-  data:     '數據 論壇 OR 大數據 研討會 OR 數據分析 峰會',
-};
-
-const TOPIC_LABELS = {
-  all:'全部', retail:'零售', ai:'AI', security:'資安', digital:'數位轉型', data:'數據'
-};
-
+// ════════════════════════════════════
+// 載入新聞
+// ════════════════════════════════════
 async function loadNews() {
   const statusEl = document.getElementById('news-status');
   const gridEl   = document.getElementById('news-grid');
-  statusEl.textContent = '載入中…';
-  gridEl.innerHTML = '<div class="empty-state" style="padding:60px 20px"><div style="font-size:28px;margin-bottom:12px">📡</div><div>載入活動資訊中…</div></div>';
+  statusEl.textContent = '載入新聞中…';
+  gridEl.innerHTML = '<div class="empty-state" style="padding:60px 20px"><div style="font-size:28px;margin-bottom:12px">📡</div><div>載入中，請稍候…</div></div>';
 
   try {
-    // ── Step 1：優先抓 iThome 結構化活動（有日期、地點）──
-    let ithomeEvents = [];
-    try {
-      const iresp = await fetch(GAS_URL + '?action=events');
-      if (iresp.ok) {
-        const idata = await iresp.json();
-        if (idata.status === 'ok' && idata.events && idata.events.length) {
-          ithomeEvents = idata.events;
-        }
+    const resp = await fetch(GAS_URL + '?q=' + encodeURIComponent('零售 OR 百貨 OR 電商 OR 購物中心 OR 快時尚 OR 量販 OR 超市 OR 超商') + '&n=50');
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    const data = await resp.json();
+    if (data.status === 'error') throw new Error(data.message || '載入失敗');
+    if (!data.news || !data.news.length) throw new Error('目前找不到相關新聞，請稍後再試');
+
+    const normalized = data.news.map((a, i) => ({
+      title:    a.title   || '',
+      desc:     a.desc    || '',
+      link:     a.link    || '',
+      source:   a.source  || '',
+      pubDate:  a.pubDate || '',
+      category: CARD_CATS[i % CARD_CATS.length]
+    }));
+
+    // ── 來源權重排序 ──
+    const SOURCE_WEIGHT = {
+      // 高權重：產業專業媒體（3分）
+      '經濟日報': 3, '工商時報': 3, '遠見雜誌': 3, '今周刊': 3,
+      '未來流通研究所': 3, '數位時代': 3, '經理人': 3, '食力 foodNEXT': 3,
+      'managertoday.com.tw': 3,
+      // 中權重：主流財經/新聞媒體（2分）
+      '聯合新聞網': 2, '中時新聞網': 2, '風傳媒': 2, '商業周刊': 2,
+      '天下雜誌': 2, '信報網站': 2, 'ETtoday': 2, '自由財經': 2,
+      'TNL The News Lens 關鍵評論網': 2, 'Yahoo財經': 2, 'Yahoo 財經': 2,
+      'news.cnyes.com': 2, 'Vogue Taiwan': 2, 'GQ Taiwan': 2,
+      // 低權重：一般新聞（1分，預設）
+    };
+    function getWeight(source) {
+      for (const [key, w] of Object.entries(SOURCE_WEIGHT)) {
+        if (source && source.includes(key)) return w;
       }
-    } catch(e) { console.warn('iThome 載入失敗:', e.message); }
-
-    // ── Step 2：抓 Google News RSS 補充（依目前議題）──
-    const q = TOPICS[currentTopic] || TOPICS.all;
-    let newsEvents = [];
-    try {
-      const nresp = await fetch(GAS_URL + '?q=' + encodeURIComponent(q) + '&n=20');
-      if (nresp.ok) {
-        const ndata = await nresp.json();
-        if (ndata.status === 'ok' && ndata.news && ndata.news.length) {
-          newsEvents = ndata.news;
-        }
-      }
-    } catch(e) { console.warn('Google News 載入失敗:', e.message); }
-
-    // ── Step 3：顯示結果 ──
-    if (ithomeEvents.length > 0) {
-      renderEventCards(ithomeEvents);
-      const suffix = newsEvents.length ? '，另有 ' + newsEvents.length + ' 則相關新聞' : '';
-      statusEl.textContent = '共 ' + ithomeEvents.length + ' 場活動（iThome）' + suffix + ' · ' + new Date().toLocaleString('zh-TW');
-
-    } else if (newsEvents.length > 0 && GEMINI_KEY) {
-      // 沒有 iThome 活動 + 有 Gemini Key → AI 萃取新聞
-      gridEl.innerHTML = '<div class="empty-state" style="padding:60px 20px"><div style="font-size:28px;margin-bottom:12px">✨</div><div>Gemini AI 整理活動資訊中…</div></div>';
-      await extractAndRender(newsEvents, statusEl, gridEl);
-
-    } else if (newsEvents.length > 0) {
-      // 只有新聞，沒有 Key → 顯示新聞列表
-      renderNewsCards(newsEvents);
-      statusEl.textContent = '共 ' + newsEvents.length + ' 則相關新聞（設定 Gemini Key 可取得結構化活動資料）· ' + new Date().toLocaleString('zh-TW');
-
-    } else {
-      throw new Error('目前找不到相關活動資料，請稍後再試');
+      return 1;
     }
+    // 時間衰減（7天內線性衰減）
+    const nowMs = Date.now();
+    function getTimeFactor(pubDate) {
+      const m = pubDate && pubDate.match(/(\d{4})\/(\d+)\/(\d+)/);
+      if (!m) return 0.5;
+      const ageDays = (nowMs - new Date(+m[1], +m[2]-1, +m[3]).getTime()) / 86400000;
+      return Math.max(0.1, 1 - ageDays / 7);
+    }
+    // 綜合分數 = 來源權重 × 時間衰減
+    const scored = normalized
+      .map(item => ({ ...item, _score: getWeight(item.source) * getTimeFactor(item.pubDate) }))
+      .sort((a, b) => b._score - a._score);
 
+    // 有 Gemini Key → AI 挑頭條；否則取最高分前 5 則
+    if (GEMINI_KEY) {
+      await pickHeadlines(scored);
+    } else {
+      renderHeadlines(scored.slice(0, 5), false);
+      renderCards(scored.slice(5));
+    }
+    statusEl.textContent = `共 ${scored.length} 則（來源權重排序）· Google News · ${new Date().toLocaleString('zh-TW')}`;
   } catch(err) {
     console.error(err);
-    gridEl.innerHTML =
+    document.getElementById('news-grid').innerHTML =
       '<div class="empty-state">' +
       '<div style="font-size:28px;margin-bottom:10px">📡</div>' +
-      '<div style="font-weight:600;margin-bottom:8px">載入失敗</div>' +
-      '<div style="font-size:11px;background:var(--gray-100);padding:8px 12px;max-width:500px;margin:8px auto 14px">' + escT(err.message) + '</div>' +
-      '<button onclick="loadNews()" style="padding:8px 18px;background:var(--red);color:#fff;border:none;font-size:12px;font-weight:700;cursor:pointer">🔄 重試</button>' +
+      '<div style="font-weight:600;margin-bottom:8px">新聞載入失敗</div>' +
+      '<div style="font-size:11px;font-family:var(--font-mono);background:var(--gray-100);padding:8px 12px;max-width:500px;margin:8px auto 14px">' + escT(err.message) + '</div>' +
+      '<button onclick="loadNews()" style="padding:8px 18px;background:var(--red);color:#fff;border:none;font-size:12px;font-weight:700;cursor:pointer;margin-right:8px">🔄 重試</button>' +
+      '<a href="https://news.google.com/search?q=' + encodeURIComponent('零售 百貨 電商') + '&hl=zh-TW&gl=TW" target="_blank" style="padding:8px 16px;border:1px solid var(--gray-300);color:var(--gray-700);font-size:12px;text-decoration:none">🔗 Google 新聞</a>' +
       '</div>';
-    statusEl.textContent = '';
+    document.getElementById('news-status').textContent = '';
   }
 }
 
-async function extractAndRender(rawNews, statusEl, gridEl) {
-  // 把新聞標題+摘要整理成文字，讓 Gemini 萃取活動資訊
-  const newsText = rawNews.map((n, i) =>
-    (i+1) + '. 標題：' + n.title + '\n   摘要：' + (n.desc||'無') + '\n   來源：' + (n.source||'') + ' ' + (n.pubDate||'')
-  ).join('\n\n');
+// ════════════════════════════════════
+// Gemini AI 摘要（單則）
+// ════════════════════════════════════
+async function generateSummary(idx) {
+  const btn = document.getElementById('ai-btn-' + idx);
+  const title  = btn.dataset.title;
+  const desc   = btn.dataset.desc;
+  const source = btn.dataset.source;
+  const link   = btn.dataset.link;
+  openAnalysisPage({ title, desc, source, link });
+}
 
-  const topicLabel = TOPIC_LABELS[currentTopic] || '全部';
-
-  const prompt = `以下是關於「${topicLabel}」相關研討會、論壇、展覽的新聞列表。
-請從中萃取出真實的活動資訊，只回傳 JSON 陣列，不要 markdown：
-
-${newsText}
-
-回傳格式（JSON 陣列）：
-[
-  {
-    "name": "活動名稱",
-    "date": "活動日期（如：2026/4/15 或 2026年4月 或 不詳）",
-    "location": "地點（如：台北、線上、不詳）",
-    "organizer": "主辦單位（如：資策會、不詳）",
-    "topic": "議題分類（零售/AI/資安/數位轉型/數據）",
-    "link": "原始新聞連結",
-    "desc": "一句話說明活動內容（30字內）"
+// 開啟產業分析頁面（新分頁）
+async function openAnalysisPage(item) {
+  if (!GEMINI_KEY) {
+    alert('請先在上方輸入並儲存 Gemini API Key');
+    return;
   }
-]
 
-規定：
-- 只列出真實有提到的活動，不要捏造
-- 若某欄位新聞中未提及，填「不詳」
-- 最多回傳 15 筆
-- 只回傳 JSON 陣列`;
+  // 顯示分析區塊並滾動到那裡
+  const panel = document.getElementById('inline-analysis');
+  panel.style.display = 'block';
+  panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+  // 填入新聞資訊
+  document.getElementById('ia-news-title').textContent  = item.title || '';
+  document.getElementById('ia-news-source').textContent = (item.source||'') + (item.pubDate ? '  ·  ' + item.pubDate : '');
+  document.getElementById('ia-source-meta').textContent = item.source || '—';
+  document.getElementById('ia-status').textContent = '分析中…';
+  document.getElementById('ia-status').style.color = '';
+  if (item.link) {
+    const lnk = document.getElementById('ia-link');
+    lnk.href = item.link;
+    lnk.style.display = 'inline-block';
+  }
+
+  // 重置內容
+  document.getElementById('ia-focus').innerHTML =
+    '<div style="display:flex;gap:10px;align-items:center"><div style="width:20px;height:20px;border:2px solid rgba(255,255,255,.2);border-top-color:var(--red);border-radius:50%;animation:spin .7s linear infinite"></div><span style="color:rgba(255,255,255,.5);font-size:12px">AI 分析中，請稍候…</span></div>';
+  document.getElementById('ia-strategy').textContent = '分析生成中…';
+  document.getElementById('ia-strategy').style.fontStyle = 'italic';
+
+  const prompt = '你是資深零售產業分析師。針對以下新聞，用繁體中文分析，只回傳 JSON 不要 markdown：\n\n新聞標題：' + item.title + '\n新聞摘要：' + (item.desc||'（無摘要）') + '\n來源：' + (item.source||'') + '\n\n回傳格式：\n{"focus":"【事件】80字，說明核心事件、涉及品牌或市場","strategy":"【分析】120字，說明為何重要、對零售產業的影響與趨勢","source_short":"來源媒體簡稱","scope":"台灣零售或全球零售"}';
 
   try {
     const resp = await fetch(
@@ -577,89 +642,176 @@ ${newsText}
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { maxOutputTokens: 4096, temperature: 0.3, responseMimeType: 'application/json' }
+          generationConfig: { maxOutputTokens: 8192, temperature: 0.6, responseMimeType: 'application/json' }
         })
       }
     );
-    if (!resp.ok) throw new Error('Gemini HTTP ' + resp.status);
-    const gData = await resp.json();
-    const raw   = gData.candidates?.[0]?.content?.parts?.[0]?.text || '';
-    if (!raw) throw new Error('Gemini 未回傳內容');
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    const data = await resp.json();
+    const raw  = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    const finishReason = data.candidates?.[0]?.finishReason || '';
+    if (!raw) throw new Error('AI 未回傳內容');
 
-    const clean = raw.replace(/^```(?:json)?\s*/i,'').replace(/\s*```\s*$/,'').trim();
-    const events = JSON.parse(clean);
-    if (!Array.isArray(events) || !events.length) throw new Error('無法解析活動資料');
+    const r = JSON.parse(raw.replace(/^```(?:json)?\s*/i,'').replace(/\s*```\s*$/,'').trim());
 
-    renderEventCards(events);
-    statusEl.textContent = '共 ' + events.length + ' 場活動（AI 整理）· ' + new Date().toLocaleString('zh-TW');
+    document.getElementById('ia-focus').innerHTML = '<div style="font-size:14px;line-height:1.85">' + escT(r.focus||'') + '</div>';
+    document.getElementById('ia-strategy').textContent = r.strategy || '';
+    document.getElementById('ia-strategy').style.fontStyle = 'normal';
+    document.getElementById('ia-source-meta').textContent = r.source_short || item.source || '—';
+    document.getElementById('ia-scope').textContent = r.scope || 'Global Retail · TW Focus';
+    document.getElementById('ia-status').textContent = finishReason === 'STOP' ? '正常 · ' + new Date().toLocaleTimeString('zh-TW') : finishReason;
+    document.getElementById('ia-status').style.color = finishReason === 'STOP' ? 'var(--red)' : '';
 
   } catch(err) {
-    console.warn('Gemini 萃取失敗，改顯示原始新聞:', err.message);
-    renderNewsCards(rawNews);
-    statusEl.textContent = '共 ' + rawNews.length + ' 則（AI 整理失敗，顯示原始新聞）';
+    document.getElementById('ia-focus').innerHTML = '<div style="color:rgba(255,61,46,.9);font-size:13px">分析失敗：' + escT(err.message) + '</div>';
+    document.getElementById('ia-strategy').textContent = '';
+    document.getElementById('ia-status').textContent = '錯誤';
+    document.getElementById('ia-status').style.color = 'var(--red)';
   }
 }
 
-// ── 活動卡片（有結構化資料） ──
-function renderEventCards(events) {
-  const grid = document.getElementById('news-grid');
-  if (!events.length) { grid.innerHTML = '<div class="empty-state">找不到相關活動</div>'; return; }
+// ════════════════════════════════════
+// 頭條選取（Gemini AI）
+// ════════════════════════════════════
+async function pickHeadlines(allItems) {
+  // 先用前 5 則當預設顯示，等 Gemini 回應再更新
+  renderHeadlines(allItems.slice(0, 5), false);
+  renderCards(allItems.slice(5));
+
+  try {
+    const titles = allItems.map((a, i) => (i + 1) + '. ' + a.title).join('\n');
+    const prompt = `以下是今日零售產業新聞清單，請從中選出最值得關注的 5 則頭條新聞（以重要性、影響力、話題性為標準）。只回傳 5 個編號，用逗號分隔，例如：3,7,12,25,41
+
+新聞清單：
+${titles}
+
+只回傳數字，不要任何解釋。`;
+
+    const resp = await fetch(
+      'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' + GEMINI_KEY,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: { maxOutputTokens: 32, temperature: 0.3 }
+        })
+      }
+    );
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    const data = await resp.json();
+    const raw = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    const indices = raw.match(/\d+/g);
+    if (!indices || indices.length < 3) throw new Error('回傳格式異常');
+
+    // 取 Gemini 選出的編號（1-based → 0-based）
+    const picked = indices.slice(0, 5).map(n => parseInt(n) - 1).filter(i => i >= 0 && i < allItems.length);
+    const headlines = picked.map(i => allItems[i]);
+    const rest = allItems.filter((_, i) => !picked.includes(i));
+
+    renderHeadlines(headlines, true);
+    renderCards(rest);
+  } catch(e) {
+    console.warn('AI 頭條選取失敗，使用最新前 5 則:', e.message);
+    // 失敗就保持預設的前 5 則
+  }
+}
+
+function renderHeadlines(items, isAI) {
+  const sec   = document.getElementById('headline-section');
+  const listEl = document.getElementById('headline-list');
+  const label = document.getElementById('news-section-label');
+  if (!items.length) return;
+
+  sec.style.display   = '';
+  label.style.display = 'flex';
 
   var html = '';
-  for (var rs = 0; rs < events.length; rs += 3) {
-    html += '<div class="news-row3">';
-    events.slice(rs, rs+3).forEach(function(ev, ri) {
-      var i = rs + ri;
-      var topicColor = { 'AI':'#1650FF','資安':'#059669','數位轉型':'#7C3AED','數據':'#D97706','零售':'var(--red)' }[ev.topic] || 'var(--gray-500)';
-      html +=
-        '<div class="news-card">' +
-        '<div class="news-card-body">' +
-        // 議題標籤
-        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">' +
-        '<span style="font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:' + topicColor + '">' + escT(ev.topic||'活動') + '</span>' +
-        '<span class="news-card-rank" style="margin-bottom:0">#' + (i+1) + '</span>' +
-        '</div>' +
-        // 活動名稱
-        '<div style="font-size:13px;font-weight:800;color:var(--black);line-height:1.4;margin-bottom:10px">' + escT(ev.name||'') + '</div>' +
-        // 資訊行
-        '<div style="display:flex;flex-direction:column;gap:3px;margin-bottom:10px">' +
-        '<div style="font-size:11px;color:var(--gray-700)">📅 ' + escT(ev.date||'不詳') + '</div>' +
-        '<div style="font-size:11px;color:var(--gray-700)">📍 ' + escT(ev.location||'不詳') + '</div>' +
-        '<div style="font-size:11px;color:var(--gray-700)">🏢 ' + escT(ev.organizer||'不詳') + '</div>' +
-        '</div>' +
-        // 描述
-        (ev.desc ? '<div style="font-size:11px;color:var(--gray-500);line-height:1.55;margin-bottom:8px">' + escT(ev.desc) + '</div>' : '') +
-        // 按鈕
-        (ev.link ? '<a href="' + escAttr(ev.link) + '" target="_blank" rel="noopener" style="display:inline-block;padding:4px 10px;background:var(--black);color:#fff;font-size:10px;font-weight:700;letter-spacing:.06em;text-decoration:none">🔗 活動詳情</a>' : '') +
-        '</div></div>';
-    });
-    html += '</div>';
-  }
-  grid.innerHTML = html;
+  items.slice(0, 5).forEach(function(item, i) {
+    html +=
+      '<div class="headline-row">' +
+      '<div class="headline-num">' + (i + 1) + '.</div>' +
+      '<div class="headline-body">' +
+      '<div class="headline-title">' + escT(item.title) + '</div>' +
+      '<div class="headline-meta">' +
+      escT(item.source||'') + (item.pubDate ? ' · ' + escT(item.pubDate) : '') +
+      '<a href="' + escAttr(item.link) + '" target="_blank" rel="noopener" ' +
+      'style="padding:2px 8px;background:var(--black);color:#fff;font-size:10px;font-weight:700;letter-spacing:.06em;text-decoration:none;white-space:nowrap">🔗 原始新聞</a>' +
+      '<button id="ai-btn-h' + i + '" onclick="generateSummaryH(' + i + ')" ' +
+      'data-title="' + escAttr(item.title) + '" data-desc="' + escAttr(item.desc||'') + '" ' +
+      'data-source="' + escAttr(item.source||'') + '" data-link="' + escAttr(item.link||'') + '" ' +
+      'style="padding:2px 8px;background:#984807;color:#fff;font-size:10px;font-weight:700;letter-spacing:.06em;border:none;cursor:pointer;white-space:nowrap">✨ AI 摘要</button>' +
+      '</div>' +
+      '</div></div>';
+  });
+  listEl.innerHTML = html;
 }
 
-// ── 新聞卡片（無 Gemini Key 或備援） ──
-function renderNewsCards(items) {
+// AI 摘要（頭條卡片專用）— 開新分析頁面
+function generateSummaryH(idx) {
+  const btn = document.getElementById('ai-btn-h' + idx);
+  const title  = btn.dataset.title;
+  const desc   = btn.dataset.desc;
+  const source = btn.dataset.source;
+  const link   = btn.dataset.link;
+  openAnalysisPage({ title, desc, source, link });
+}
+
+// ════════════════════════════════════
+// 渲染卡片
+// ════════════════════════════════════
+function cardButtons(item, idx) {
+  return '<div style="display:flex;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap">' +
+    '<span style="font-size:11px;color:var(--gray-500);flex-shrink:0">' +
+    escT(item.source || '') + (item.pubDate ? '&nbsp;·&nbsp;' + escT(item.pubDate) : '') +
+    '</span>' +
+    '<a href="' + escAttr(item.link) + '" target="_blank" rel="noopener" ' +
+    'style="padding:2px 8px;background:var(--black);color:#fff;font-size:10px;font-weight:700;' +
+    'letter-spacing:.06em;text-decoration:none;white-space:nowrap">🔗 原始新聞</a>' +
+    '<button id="ai-btn-' + idx + '" onclick="generateSummary(' + idx + ')" ' +
+    'data-title="' + escAttr(item.title) + '" ' +
+    'data-desc="' + escAttr(item.desc) + '" ' +
+    'data-source="' + escAttr(item.source) + '" ' +
+    'data-link="' + escAttr(item.link) + '" ' +
+    'style="padding:2px 8px;background:#984807;color:#fff;font-size:10px;font-weight:700;' +
+    'letter-spacing:.06em;border:none;cursor:pointer;white-space:nowrap">✨ AI 摘要</button>' +
+    '</div>';
+}
+
+function cardFooter(item) {
+  return '';  // footer 合併到 cardButtons
+}
+
+function renderCards(items) {
   const grid = document.getElementById('news-grid');
-  if (!items.length) { grid.innerHTML = '<div class="empty-state">找不到相關活動</div>'; return; }
+  if (!items.length) { grid.innerHTML = '<div class="empty-state">找不到相關新聞</div>'; return; }
+
+  // 統一三欄，不再有第一則獨立大橫幅
   var html = '';
   for (var rs = 0; rs < items.length; rs += 3) {
     html += '<div class="news-row3">';
-    items.slice(rs, rs+3).forEach(function(item, ri) {
+    items.slice(rs, rs + 3).forEach(function(item, ri) {
       var i = rs + ri;
-      html +=
-        '<div class="news-card"><div class="news-card-body">' +
-        '<div class="news-card-rank">#' + (i+1) + '</div>' +
-        '<div class="news-card-cat">' + escT(item.source||'') + '</div>' +
-        '<div class="news-card-title">' + escT(item.title||'') + '</div>' +
-        '<div class="news-card-footer"><span style="font-size:11px;color:var(--gray-500)">' + escT(item.pubDate||'') + '</span></div>' +
-        (item.link ? '<a href="' + escAttr(item.link) + '" target="_blank" rel="noopener" style="display:inline-block;margin-top:8px;padding:4px 10px;background:var(--black);color:#fff;font-size:10px;font-weight:700;letter-spacing:.06em;text-decoration:none">🔗 詳情</a>' : '') +
+      html += '<div class="news-card">' +
+        '<div class="news-card-body">' +
+        '<div class="news-card-rank">#' + (i + 1) + '</div>' +
+        '<div class="news-card-cat">' + escT(item.category) + '</div>' +
+        '<div class="news-card-title">' + escT(item.title) + '</div>' +
+        cardFooter(item) +
+        cardButtons(item, i) +
         '</div></div>';
     });
     html += '</div>';
   }
   grid.innerHTML = html;
 }
+
+function openGoogleNews() {
+  window.open('https://news.google.com/search?q=' + encodeURIComponent('零售 百貨 電商') + '&hl=zh-TW&gl=TW', '_blank');
+}
+
+function escT(s)    { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function escAttr(s) { return String(s||'').replace(/"/g,'&quot;').replace(/'/g,"&#39;"); }
 
 // ── Gemini Key 管理 ──
 function saveGeminiKey() {
@@ -669,30 +821,27 @@ function saveGeminiKey() {
   localStorage.setItem('gemini_key', val);
   document.getElementById('gemini-key-input').value = '';
   document.getElementById('gemini-key-input').placeholder = 'Key 已儲存 ✓';
-  document.getElementById('gemini-key-status').textContent = '✓ 已儲存，AI 整理功能已啟用';
-  loadNews();
+  document.getElementById('gemini-key-status').textContent = '✓ 已儲存，AI 摘要功能已啟用';
+  document.getElementById('gemini-key-status').style.color = 'var(--success)';
 }
+
 function clearGeminiKey() {
   GEMINI_KEY = '';
   localStorage.removeItem('gemini_key');
+  document.getElementById('gemini-key-input').value = '';
   document.getElementById('gemini-key-input').placeholder = '貼上你的 Gemini API Key…';
-  document.getElementById('gemini-key-status').textContent = '';
+  document.getElementById('gemini-key-status').textContent = 'Key 已清除';
+  document.getElementById('gemini-key-status').style.color = 'var(--gray-500)';
 }
-
-function openGoogleNews() {
-  window.open('https://news.google.com/search?q=' + encodeURIComponent('研討會 論壇 峰會') + '&hl=zh-TW&gl=TW', '_blank');
-}
-
-function escT(s)    { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-function escAttr(s) { return String(s||'').replace(/"/g,'&quot;').replace(/'/g,"&#39;"); }
 
 document.addEventListener('DOMContentLoaded', () => {
-  // 恢復 Gemini Key
+  // 讀取已儲存的 Key
   const saved = localStorage.getItem('gemini_key');
   if (saved) {
     GEMINI_KEY = saved;
     document.getElementById('gemini-key-input').placeholder = 'Key 已儲存 ✓';
-    document.getElementById('gemini-key-status').textContent = '✓ Key 已載入';
+    document.getElementById('gemini-key-status').textContent = '✓ Key 已載入，AI 摘要功能已啟用';
+    document.getElementById('gemini-key-status').style.color = 'var(--success)';
   }
   loadNews();
 });
