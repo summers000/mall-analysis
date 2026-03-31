@@ -434,25 +434,18 @@
 
 <!-- ① 本週全球零售十大新聞 -->
 <section class="news-section">
-  <div style="background:var(--white);padding:14px 32px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+  <div style="background:var(--white);padding:14px 32px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;border-bottom:3px solid var(--red)">
     <div>
       <div style="font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--red);margin-bottom:3px">Event Intelligence</div>
       <div style="font-size:22px;font-weight:800;color:var(--black);letter-spacing:-.01em">產業活動與研討會</div>
     </div>
     <div style="display:flex;gap:8px;align-items:center">
       <button onclick="loadNews()" style="padding:8px 18px;background:var(--red);color:#fff;border:none;font-size:12px;font-weight:700;letter-spacing:.06em;cursor:pointer;text-transform:uppercase">🔄 重新整理</button>
-      <button onclick="openGoogleNews()" style="padding:8px 16px;background:transparent;border:1px solid rgba(255,255,255,.3);color:rgba(255,255,255,.7);font-size:12px;cursor:pointer">🔗 Google 新聞</button>
+      <button onclick="openGoogleNews()" style="padding:8px 16px;background:transparent;border:1px solid var(--gray-300);color:var(--gray-500);font-size:12px;cursor:pointer">🔗 Google 新聞</button>
     </div>
   </div>
   
-  <div id="gemini-key-bar" style="padding:8px 32px;background:#f9f9f9;border-bottom:1px solid var(--gray-300);display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-    <span style="font-size:11px;font-weight:700;letter-spacing:.06em;color:var(--gray-500);text-transform:uppercase">Gemini Key</span>
-    <input id="gemini-key-input" type="password" placeholder="貼上你的 Gemini API Key…" autocomplete="off"
-      style="flex:1;min-width:200px;max-width:360px;padding:5px 10px;font-size:12px;border:1px solid var(--gray-300);font-family:var(--font-mono);outline:none">
-    <button onclick="saveGeminiKey()" style="padding:5px 14px;background:var(--black);color:#fff;font-size:11px;font-weight:700;border:none;cursor:pointer;letter-spacing:.06em">儲存</button>
-    <button onclick="clearGeminiKey()" style="padding:5px 14px;background:transparent;border:1px solid var(--gray-300);color:var(--gray-500);font-size:11px;cursor:pointer">清除</button>
-    <span id="gemini-key-status" style="font-size:11px;color:var(--gray-500)"></span>
-  </div>
+
   <div id="news-status"></div>
   <!-- 一般新聞 -->
   <!-- 議題 Tab -->
